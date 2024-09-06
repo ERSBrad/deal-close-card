@@ -1,0 +1,20 @@
+{
+  "appFunctions": {
+    "fetchAssociatedContacts": {
+      "file": "fetchAssociatedContacts.js",
+      "secrets": []
+    },
+    "fetchAssociatedCompanies": {
+      "file": "fetchAssociatedCompanies.js",
+      "secrets": []
+    },
+    "fetchOwnersByTeam": {
+      "file": "fetchOwnersByTeam.js",
+      "secrets": []
+    },
+    "ersCheckFoldername": {
+      "file": "ersCheckFoldername.js",
+      "secrets": ["ERS_API_KEY"]
+    }
+  }
+}

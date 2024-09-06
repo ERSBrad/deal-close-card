@@ -1,0 +1,28 @@
+{
+  "name": "Deal Close Sale",
+  "description": "Guided Closing Process for ERS Sales Representatives",
+  "uid": "deal_close_sale",
+  "scopes": ["crm.objects.contacts.read", "crm.objects.contacts.write"],
+  "public": false,
+  "extensions": {
+    "crm": {
+      "cards": [
+        {
+          "file": "extensions/close-deal-card.json"
+        }
+      ]
+    }
+  },
+  "settings": {
+    "teams": {
+      "sales": {
+        "ers": {
+          "id": "49960194"
+        },
+        "drs": {
+          "id": "49960165"
+        }
+      }
+    }
+  }
+}

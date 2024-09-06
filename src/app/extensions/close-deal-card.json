@@ -1,0 +1,12 @@
+{
+  "type": "crm-card",
+  "data": {
+    "title": "Close Sales Deal",
+    "uid": "close_deal_card",
+    "location": "crm.record.tab",
+    "module": {
+      "file": "CloseDeal.jsx"
+    },
+    "objectTypes": [{ "name": "deals" }]
+  }
+}

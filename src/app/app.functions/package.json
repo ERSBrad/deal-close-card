@@ -1,0 +1,10 @@
+{
+  "name": "deal-close-sale",
+  "version": "0.1.0",
+  "author": "Brad Tollett",
+  "license": "MIT",
+  "dependencies": {
+    "@hubspot/api-client": "^7.0.1",
+    "axios": "^0.27.2"
+  }
+}
