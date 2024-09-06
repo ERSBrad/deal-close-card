@@ -35,33 +35,47 @@ const Extension = ({
 
   const [submitEnabled, setSubmitEnabled] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [requiredFieldsBySteps, setRequiredFieldsBySteps] = useState({
-    "Create Foldername & Associations": {
-      "foldername": false,
-      "salesRep": false,
-      "billingContact": false,
-      "billingCompany": false,
-    },
-    "Add Line Items": {
-      "planTierAdded": false
-    }
-  });
-  const stepNames = Object.keys(requiredFieldsBySteps);
+  const [requiredFieldsBySteps, setRequiredFieldsBySteps] = useState([
+    [
+      "Create Foldername & Associations", 
+      {
+        "foldername": false,
+        "salesRepresentative": false,
+        "billingContact": false,
+        "billingCompany": false,
+      }
+    ],
+    [
+      "Add Line Items", 
+      {
+        "planTierAdded": false
+      }
+    ]
+  ]);
+
+  const stepNames = requiredFieldsBySteps.map(step => step[0]);
   
   const setValidity = (id, isValid) => {
+    let requiredFieldsByStepsCopy = [...requiredFieldsBySteps];
     let currentStepFields = requiredFieldsBySteps[currentStep][1];
-    for(currentStepField in currentStepFields) {
+    for(const currentStepField in currentStepFields) {
       if(currentStepField === id) {
-        setRequiredFieldsBySteps({
-          ...requiredFieldsBySteps,
-          [currentStep]: {
-            ...currentStepFields,
-            [id]: isValid
-          }
-        });
+        console.log(`Setting ${id} to ${isValid}`);
+        requiredFieldsByStepsCopy[currentStep][1][id] = isValid;
+        break;
       }
     }
-    console.log(JSON.stringify(requiredFieldsBySteps, null, 2));
+    setRequiredFieldsBySteps(requiredFieldsByStepsCopy);
+    let currentStepFieldsArray = Object.entries(requiredFieldsByStepsCopy[currentStep][1]);
+    let allFieldsValid = currentStepFieldsArray.every(field => field[1] === true);
+    console.log(allFieldsValid);
+    if(allFieldsValid) {
+      setSubmitEnabled(true);
+    }
+  }
+
+  const handleStepSubmission = () => {
+    sendAlert({ message: "Step Submitted", type: "success" });
   }
 
   return (
@@ -86,7 +100,7 @@ const Extension = ({
           </Box>
           <Box flex={1}>
             <SalesRepresentativeSelector 
-              id="salesRep" setValidity={setValidity}
+              id="salesRepresentative" setValidity={setValidity}
               context={context} 
               runServerless={runServerless} 
               fetchProperties={actions.fetchCrmObjectProperties} 
@@ -112,6 +126,7 @@ const Extension = ({
             disabled={!submitEnabled}
             variant={"primary"}
             type={"submit"}
+            onClick={handleStepSubmission}
           >
             Submit & Continue
           </Button>

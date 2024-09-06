@@ -14,8 +14,10 @@ import {
 
 } from "@hubspot/ui-extensions/experimental";
 
-export const ContactSelector = ({ context, runServerless }) => {
+export const ContactSelector = ({ id, setValidity, context, runServerless }) => {
 
+    const [isValid, setIsValid] = useState(false);
+    const [showError, setShowError] = useState(false);
     const [loading, setLoading] = useState(true);
     const [contacts, setContacts] = useState([]);
     const [selectedContact, setSelectedContact] = useState({
@@ -23,20 +25,23 @@ export const ContactSelector = ({ context, runServerless }) => {
         label: "",
         properties: {}
     });
-    const [isValid, setIsValid] = useState(true);
     const [validationMessage, setValidationMessage] = useState("");
+    let placeholderText = loading ? "Loading..." : "Select a contact";
 
+    useEffect(() => {
+        setValidity(id, isValid);
+    }, [isValid]);
+    
     useEffect(() => {
         async function fetchContacts() {
             let serverlessFunction = await runServerless({
                 name: "fetchAssociatedContacts", parameters: { currentObjectId: context.crm.objectId }
             });
-            console.log(serverlessFunction);
             if(serverlessFunction.status !== 'SUCCESS') throw new Error(serverlessFunction.message);
             let associatedContacts = serverlessFunction.response;
             switch(associatedContacts.length) {
                 case 0:
-                    setIsValid(false);
+                    setShowError(true);
                     setValidationMessage("No contacts found for this deal, please create a contact first.");
                     break;
                 case 1:
@@ -58,8 +63,6 @@ export const ContactSelector = ({ context, runServerless }) => {
         let selectedContact = contacts.find(contact => contact.value === value);
         setSelectedContact(selectedContact);
     }
-    let hasSelectedContact = selectedContact.value !== "";
-    let placeholderText = loading ? "Loading..." : "Select a contact";
     
     return (
         <Tile compact>
@@ -74,7 +77,7 @@ export const ContactSelector = ({ context, runServerless }) => {
                         onChange={(value) => handleSelectChange(value)}
                         placeholder={placeholderText}
                         readOnly={loading}
-                        error={!isValid}
+                        error={showError}
                         validationMessage={validationMessage}
                     />
                 </Box>

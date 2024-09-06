@@ -10,8 +10,12 @@ import {
     CrmActionButton,
 } from "@hubspot/ui-extensions/crm";
 
-export const CompanySelector = ({ context, runServerless, sendAlert }) => {
+export const CompanySelector = ({  id, setValidity, context, runServerless, sendAlert }) => {
 
+    const [isValid, setIsValid] = useState(false);
+    const [showError, setShowError] = useState(false);
+    //Maybe change below to useState({type: "valid", message: ""}); to eliminate showError? type:"error" for showing error
+    const [validationMessage, setValidationMessage] = useState("");
     const [loading, setLoading] = useState(true);
     const [companies, setCompanies] = useState([]);
     const [selectedCompany, setSelectedCompany] = useState({
@@ -19,8 +23,10 @@ export const CompanySelector = ({ context, runServerless, sendAlert }) => {
         label: "",
         properties: {}
     });
-    const [isValid, setIsValid] = useState(true);
-    const [validationMessage, setValidationMessage] = useState("");
+
+    useEffect(() => {
+        setValidity(id, isValid);
+    }, [isValid]);
 
     useEffect(() => {
         async function fetchCompanies() {
@@ -31,8 +37,8 @@ export const CompanySelector = ({ context, runServerless, sendAlert }) => {
             let associatedCompanies = serverlessFunction.response;
             switch(associatedCompanies.length) {
                 case 0:
-                    setIsValid(false);
-                    setValidationMessage("No companies found for this deal, please create a company first.");
+                    setShowError(true);
+                    setValidationMessage("No companies associated with this deal, create a company to continue.");
                     break;
                 case 1:
                     setCompanies(associatedCompanies);
@@ -78,8 +84,8 @@ export const CompanySelector = ({ context, runServerless, sendAlert }) => {
                         value={selectedCompany.value}
                         onChange={(value) => handleSelectChange(value)}
                         placeholder={placeholderText}
-                        readOnly={loading || !isValid}
-                        error={!isValid}
+                        readOnly={loading || showError}
+                        error={showError}
                         validationMessage={validationMessage}
                     />
                 </Box>
