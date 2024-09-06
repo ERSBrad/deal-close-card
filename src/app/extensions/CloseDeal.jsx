@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   Flex,
   Box,
-  Divider,
   Button,
   Form,
   hubspot,
@@ -34,29 +33,37 @@ const Extension = ({
   runServerless, 
 }) => {
 
-  const stepNames = [
-    "Create Foldername & Associations", 
-    "Add Line Items", 
-    "Confirm Billing Address", 
-    "Confirm Shipping Address", 
-    //Move Schedule last step if possible, but it gives time for info to be sent to NetSuite
-    "Schedule Onboarding", 
-    "Collect Payment"
-  ];
-
-  const [currentStep, setCurrentStep] = useState(0);
   const [submitEnabled, setSubmitEnabled] = useState(false);
-
-  function handleEnter(event) {
-    if (event.keyCode === 13) {
-      const form = event.target.form;
-      console.log(form);
-      const index = Array.prototype.indexOf.call(form, event.target);
-      form.elements[index + 1].focus();
-      event.preventDefault();
+  const [currentStep, setCurrentStep] = useState(0);
+  const [requiredFieldsBySteps, setRequiredFieldsBySteps] = useState({
+    "Create Foldername & Associations": {
+      "foldername": false,
+      "salesRep": false,
+      "billingContact": false,
+      "billingCompany": false,
+    },
+    "Add Line Items": {
+      "planTierAdded": false
     }
-  }
+  });
+  const stepNames = Object.keys(requiredFieldsBySteps);
   
+  const setValidity = (id, isValid) => {
+    let currentStepFields = requiredFieldsBySteps[currentStep][1];
+    for(currentStepField in currentStepFields) {
+      if(currentStepField === id) {
+        setRequiredFieldsBySteps({
+          ...requiredFieldsBySteps,
+          [currentStep]: {
+            ...currentStepFields,
+            [id]: isValid
+          }
+        });
+      }
+    }
+    console.log(JSON.stringify(requiredFieldsBySteps, null, 2));
+  }
+
   return (
     <Flex direction="column" gap="large" align="stretch">
       <Box alignSelf="center">
@@ -70,14 +77,35 @@ const Extension = ({
       <Form >
         {/* Start splitting this into better components */}
         <Flex direction="column" gap="small" align="stretch">
-          <FoldernameValidator context={context} runServerless={runServerless} onKeyDown={handleEnter} />
-          <SalesRepresentativeSelector context={context} runServerless={runServerless} fetchProperties={actions.fetchCrmObjectProperties} />
+          <Box flex={1}>
+            <FoldernameValidator 
+              id="foldername" setValidity={setValidity}
+              context={context} 
+              runServerless={runServerless} 
+            />
+          </Box>
+          <Box flex={1}>
+            <SalesRepresentativeSelector 
+              id="salesRep" setValidity={setValidity}
+              context={context} 
+              runServerless={runServerless} 
+              fetchProperties={actions.fetchCrmObjectProperties} 
+            />
+          </Box>
           <Flex direction="row" gap="small" flex={2}>
             <Box flex={1}>
-              <ContactSelector context={context} runServerless={runServerless}  onKeyDown={handleEnter} />
+              <ContactSelector 
+                id="billingContact" setValidity={setValidity}
+                context={context} 
+                runServerless={runServerless} 
+              />
             </Box>
             <Box flex={1}>
-              <CompanySelector context={context} runServerless={runServerless} sendAlert={sendAlert} onKeyDown={handleEnter} />
+              <CompanySelector 
+                id="billingCompany" setValidity={setValidity}
+                context={context} 
+                runServerless={runServerless} 
+              />
             </Box>
           </Flex>
           <Button
