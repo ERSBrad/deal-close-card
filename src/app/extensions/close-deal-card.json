@@ -5,7 +5,7 @@
     "uid": "close_deal_card",
     "location": "crm.record.tab",
     "module": {
-      "file": "CloseDeal.jsx"
+      "file": "DealCard.jsx"
     },
     "objectTypes": [{ "name": "deals" }]
   }

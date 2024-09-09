@@ -6,17 +6,16 @@ import {
   Input,
   Button,
 } from "@hubspot/ui-extensions";
+import { setFieldValidity, setRequiredFieldName } from "../../utils";
 
-export const FoldernameValidator = ({  id, setValidity, context, runServerless, sendAlert, validInput }) => {
+export const FoldernameValidator = ({  id, setValidity, fieldNameGenerator, context, runServerless, sendAlert, validInput }) => {
 
     const [foldername, setFoldername] = useState("");
     const [showError, setShowError] = useState(false);
     const [validationMessage, setValidationMessage] = useState("");
     const [isValid, setIsValid] = useState(false);
-
-    useEffect(() => {
-        setValidity(id, isValid);
-    }, [isValid]);
+    const fieldName = setRequiredFieldName(fieldNameGenerator);
+    setFieldValidity(fieldName, setValidity, isValid);
 
     const checkFoldername = async () => {
         if(foldername && foldername.length > 0) {

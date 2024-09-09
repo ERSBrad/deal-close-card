@@ -1,26 +1,26 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Select,
   Tile
 } from "@hubspot/ui-extensions";
-import appJson from "../../app.json";
+import { setFieldValidity, setRequiredFieldName } from "../../utils";
 
-export const SalesRepresentativeSelector = ({ id, setValidity, context, runServerless, fetchProperties }) => {
+export const SalesRepresentativeSelector = ({ appJson, fieldNameGenerator, setValidity, context, runServerless, fetchProperties}) => {
 
-    const [isValid, setIsValid] = useState(false);
-    const [showError, setShowError] = useState(false);
     const [salesRepresentatives, setSalesRepresentatives] = useState([]);
     const [currentSalesRepresentative, setCurrentSalesRepresentative] = useState({
         value: "",
         label: "",
         properties: {}
     });
-
-    useEffect(() => {
-        setValidity(id, isValid);
-    }, [isValid]);
+    const [showError, setShowError] = useState(false);
+    const [validationMessage, setValidationMessage] = useState("");
+    const [isValid, setIsValid] = useState(false);
+    const fieldName = setRequiredFieldName(fieldNameGenerator);
+    setFieldValidity(fieldName, setValidity, isValid);
     
     useEffect(() => {
+        
         async function determineSalesRepresentative() {
             let teams = appJson.settings.teams.sales;
             let teamIds = [];
@@ -28,7 +28,11 @@ export const SalesRepresentativeSelector = ({ id, setValidity, context, runServe
             const serverlessFunction = await runServerless({
                 name: "fetchOwnersByTeam", parameters: { teamIds: teamIds }
             });
-            if(serverlessFunction.status !== 'SUCCESS') throw new Error(serverlessFunction.message);
+            if(serverlessFunction.status !== 'SUCCESS') {
+                setShowError(true);
+                setValidationMessage(serverlessFunction.message || "An error occurred, reload the page to try again");
+                throw new Error(serverlessFunction.message);
+            }
             //Grouped it by TeamID in case we want to split it by brand segment at some point
             let salesRepresentativesByTeamIds = serverlessFunction.response;
             if(salesRepresentativesByTeamIds.length == 0) return;
@@ -59,6 +63,7 @@ export const SalesRepresentativeSelector = ({ id, setValidity, context, runServe
             setIsValid(true);
         }
         determineSalesRepresentative();
+
     }, []);
 
     return (
@@ -69,8 +74,10 @@ export const SalesRepresentativeSelector = ({ id, setValidity, context, runServe
                 tooltip="The sales representative that will get credit for this deal."
                 value={currentSalesRepresentative.value}
                 options={salesRepresentatives}
-                onChange={(value) => setSalesRepresentative(value)}
+                onChange={(value) => setCurrentSalesRepresentative(value)}
                 required={true}
+                error={showError}
+                validationMessage={validationMessage}
                 //Doesn't necessarilly need an error because this should always have a value, contact and company don't
             />
         </Tile>
