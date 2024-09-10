@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useReducer } from "react";
 import {
   Flex,
   Box,
@@ -12,7 +12,8 @@ import {
   Step1,
   Step2
 } from "./components/steps";
-import { stepReducer, initialState } from "./utils";
+
+import { stepReducer } from "./utils";
 
 // Define the extension to be run within the Hubspot CRM
 hubspot.extend(({ context, runServerlessFunction, actions }) => (
@@ -47,17 +48,47 @@ const Extension = ({
     }
   };
 
-  const [formData, setFormData] = useState({});
-  const [currentStep, setCurrentStep] = useState(0);
+  const stepInitialState = { 
+    currentStep: 0,
+  };
 
+  const [multiStepFormState, multiStepFormDispatch] = useReducer(stepReducer, stepInitialState);
+  const [currentStep, setCurrentStep] = useState(0);
   const stepNames = [
-    'New Deal Information',
-    "Setup Line Items"
+    "New Deal Information",
+    "Setup Line Items",
+    "Setup Other Items"
   ];
+
+  useEffect(() => {
+    setCurrentStep(multiStepFormState.currentStep);
+  }, [multiStepFormState.currentStep]);
+
+  const [achievedSteps, setAchievedSteps] = useState([]);
+  const stepHasBeenAchieved = (step) => {
+    return achievedSteps.includes(step);
+  }
+
+  useEffect(() => {
+    let updatedAchievedSteps = achievedSteps;
+    updatedAchievedSteps.push(multiStepFormState.currentStep);
+    setAchievedSteps(updatedAchievedSteps);
+  }, [currentStep]);
 
   const handleStepSubmission = () => {
     sendAlert({ message: "Step Submitted", type: "success" });
   }
+
+  const handleStepClick = (requestedStep) => {
+    console.log("requestedStep", requestedStep);
+    if (currentStep < requestedStep && stepHasBeenAchieved(requestedStep)) {
+      console.log("INCREMENT_STEP");
+      multiStepFormDispatch({ type: "INCREMENT_STEP", currentStep: currentStep, requestedStep: requestedStep });
+    } else if (currentStep > requestedStep) {
+      console.log("DECREMENT_STEP");
+      multiStepFormDispatch({ type: "DECREMENT_STEP", currentStep: currentStep, requestedStep: requestedStep });
+    }
+  };
 
   return (
     <Flex direction="column" gap="large" align="stretch">
@@ -68,6 +99,7 @@ const Extension = ({
           circleSize="large"
           variant="flush"
           appJson={appJson}
+          onClick={(step) => handleStepClick(step)}
         />
       </Box>
       <Form >

@@ -12,7 +12,7 @@ import {
     CompanySelector,
 } from "../inputs";
 
-import { formReducer, initialState } from "../../utils";
+import { formReducer, formInitialState } from "../../utils";
 
 // Define the Extension component, taking in runServerless, context, & sendAlert as props
 export const Step1 = ({ 
@@ -30,16 +30,12 @@ export const Step1 = ({
      */
 
     const [enableSubmit, setEnableSubmit] = useState(false);
-    const [stepState, stepDispatch] = useReducer(formReducer, initialState);
+    const [stepState, stepDispatch] = useReducer(formReducer, formInitialState);
 
     useEffect(() => {
         let shouldEnableSubmit = Object.values(stepState).every(field => field.valid);
         setEnableSubmit(shouldEnableSubmit);
     }, [stepState]);
-
-    const handleStepSubmission = (e) => {
-
-    };
 
     return (
         <Flex direction="column" gap="small" align="stretch">

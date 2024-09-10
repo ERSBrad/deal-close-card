@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-export const initialState = {};
-
+export const formInitialState = {};
 
 /**
  * This is a dynamic method of setting the required field names
@@ -35,7 +34,7 @@ export const formReducer = (state, action) => {
         }
       };
     case "RESET_FORM":
-      return initialState;
+      return formInitialState;
     default:
       return state;
   }
@@ -66,14 +65,24 @@ export const stepReducer = (state, action) => {
     case "INCREMENT_STEP":
       return {
         ...state,
-        currentStep: action.currentStep + 1
+        currentStep: action.currentStep + action.requestedStep
       };
     case "DECREMENT_STEP":
-      let decrementedStep = action.currentStep - 1;
-      if(decrementedStep < 0) decrementedStep = 0;
+      let decrementedStep = 0;
+      if(!action.requestedStep == 0) {
+        decrementedStep = (action.currentStep - action.requestedStep);
+      }
       return {
         ...state,
         currentStep: decrementedStep
+      };
+    case "STEP_SUBMISSION":
+      return {
+        ...state,
+        [action.submittedStep]: {
+          submittedStepName: action.submittedStepName,
+          submittedStepData: action.submittedStepData
+        }
       };
     default:
       return state;
