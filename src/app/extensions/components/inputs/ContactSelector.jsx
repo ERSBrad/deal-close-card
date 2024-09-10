@@ -10,9 +10,9 @@ import {
     CrmActionButton,
 } from "@hubspot/ui-extensions/crm";
 
-import { setFieldValidity, setRequiredFieldName } from "../../utils";
+import { updateFormField, setRequiredFieldName } from "../../utils";
 
-export const ContactSelector = ({ id, setValidity, fieldNameGenerator, context, runServerless }) => {
+export const ContactSelector = ({ id, setValidity, fieldName, context, runServerless, state, dispatch }) => {
 
     const [loading, setLoading] = useState(true);
     const [contacts, setContacts] = useState([]);
@@ -24,8 +24,7 @@ export const ContactSelector = ({ id, setValidity, fieldNameGenerator, context, 
     const [showError, setShowError] = useState(false);
     const [validationMessage, setValidationMessage] = useState("");
     const [isValid, setIsValid] = useState(false);
-    const fieldName = setRequiredFieldName(fieldNameGenerator);
-    setFieldValidity(fieldName, setValidity, isValid);
+    updateFormField(dispatch, fieldName, isValid, selectedContact);
 
     let placeholderText = loading ? "Loading..." : "Select a contact";
 

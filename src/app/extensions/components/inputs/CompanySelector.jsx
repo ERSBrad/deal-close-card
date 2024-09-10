@@ -9,9 +9,9 @@ import {
 import {
     CrmActionButton,
 } from "@hubspot/ui-extensions/crm";
-import { setFieldValidity, setRequiredFieldName } from "../../utils";
+import { updateFormField, setRequiredFieldName } from "../../utils";
 
-export const CompanySelector = ({  id, setValidity, fieldNameGenerator, context, runServerless, sendAlert }) => {
+export const CompanySelector = ({  id, setValidity, fieldName, context, runServerless, sendAlert, state, dispatch }) => {
 
     const [loading, setLoading] = useState(true);
     const [companies, setCompanies] = useState([]);
@@ -24,8 +24,7 @@ export const CompanySelector = ({  id, setValidity, fieldNameGenerator, context,
     //Maybe change below to useState({type: "valid", message: ""}); to eliminate showError? type:"error" for showing error
     const [validationMessage, setValidationMessage] = useState("");
     const [isValid, setIsValid] = useState(false);
-    const fieldName = setRequiredFieldName(fieldNameGenerator);
-    setFieldValidity(fieldName, setValidity, isValid);
+    updateFormField(dispatch, fieldName, isValid, selectedCompany);
 
     useEffect(() => {
         async function fetchCompanies() {

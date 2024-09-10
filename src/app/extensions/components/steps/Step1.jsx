@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useReducer, useState } from "react";
 import {
     Flex,
     Box,
@@ -11,6 +11,8 @@ import {
     ContactSelector,
     CompanySelector,
 } from "../inputs";
+
+import { formReducer, initialState } from "../../utils";
 
 // Define the Extension component, taking in runServerless, context, & sendAlert as props
 export const Step1 = ({ 
@@ -26,59 +28,58 @@ export const Step1 = ({
      * A system to add dynamic form validation to all form components.
      * Follow the props of the components to see how they interact with this system.
      */
-    const [requiredFields, setRequiredFields] = useState({});
+
     const [enableSubmit, setEnableSubmit] = useState(false);
-    const fieldNameGenerator = (fieldName) => (() => {
-        setRequiredFields((prev) => ({ ...prev, [fieldName]: false }));
-        return fieldName;
-    });
-
-
-    const setValidity = (fieldName, isValid) => {
-        setRequiredFields((prev) => ({ ...prev, [fieldName]: isValid }));
-    }
+    const [stepState, stepDispatch] = useReducer(formReducer, initialState);
 
     useEffect(() => {
-        console.log(requiredFields);
-        let enableSubmit = Object.entries(requiredFields).every(([fieldName, isValid]) => isValid);
-        setEnableSubmit(enableSubmit);
-    });
+        let shouldEnableSubmit = Object.values(stepState).every(field => field.valid);
+        setEnableSubmit(shouldEnableSubmit);
+    }, [stepState]);
+
+    const handleStepSubmission = (e) => {
+
+    };
 
     return (
         <Flex direction="column" gap="small" align="stretch">
             <Box flex={1}>
                 <FoldernameValidator 
-                    fieldNameGenerator={fieldNameGenerator("foldername")}
-                    setValidity={setValidity}
+                    fieldName={"foldername"}
                     context={context} 
                     runServerless={runServerless} 
+                    state={stepState}
+                    dispatch={stepDispatch}
                 />
             </Box>
             <Box flex={1}>
                 <SalesRepresentativeSelector 
-                    fieldNameGenerator={fieldNameGenerator("salesRepresentative")}
-                    setValidity={setValidity}
+                    fieldName={"salesRepresentative"}
                     context={context} 
                     runServerless={runServerless} 
                     fetchProperties={actions.fetchCrmObjectProperties} 
                     appJson={appJson}
+                    state={stepState}
+                    dispatch={stepDispatch}
                     />
             </Box>
             <Flex direction="row" gap="small" flex={2}>
             <Box flex={1}>
                 <ContactSelector 
-                    fieldNameGenerator={fieldNameGenerator("billingContact")}
-                    setValidity={setValidity}
+                    fieldName={"billingContact"}
                     context={context} 
                     runServerless={runServerless} 
+                    state={stepState}
+                    dispatch={stepDispatch}
                 />
             </Box>
             <Box flex={1}>
                 <CompanySelector 
-                    fieldNameGenerator={fieldNameGenerator("billingCompany")}
-                    setValidity={setValidity}
+                    fieldName={"billingCompany"}
                     context={context} 
                     runServerless={runServerless} 
+                    state={stepState}
+                    dispatch={stepDispatch}
                 />
             </Box>
             </Flex>

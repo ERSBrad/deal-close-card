@@ -23,7 +23,6 @@ export const Step2 = ({
 }) => {
 
     const [submitEnabled, setSubmitEnabled] = useState(false);
-    const [requiredFields, setRequiredFields] = useState({});
 
     const handleStepSubmission = () => {
         sendAlert({ message: "Step Submitted", type: "success" });
@@ -34,7 +33,6 @@ export const Step2 = ({
             <Box flex={1}>
                 <FoldernameValidator 
                     id="foldername" 
-                    setValidity={setValidity}
                     context={context} 
                     runServerless={runServerless} 
                 />
@@ -42,7 +40,6 @@ export const Step2 = ({
             <Box flex={1}>
                 <SalesRepresentativeSelector 
                     id="salesRepresentative" 
-                    setValidity={setValidity}
                     context={context} 
                     runServerless={runServerless} 
                     fetchProperties={actions.fetchCrmObjectProperties} 
@@ -52,7 +49,6 @@ export const Step2 = ({
             <Box flex={1}>
                 <ContactSelector 
                     id="billingContact" 
-                    setValidity={setValidity}
                     context={context} 
                     runServerless={runServerless} 
                 />
@@ -60,7 +56,6 @@ export const Step2 = ({
             <Box flex={1}>
                 <CompanySelector 
                     id="billingCompany" 
-                    setValidity={setValidity}
                     context={context} 
                     runServerless={runServerless} 
                 />
@@ -72,7 +67,7 @@ export const Step2 = ({
                 type={"submit"}
                 onClick={handleStepSubmission}
             >
-                fieldNameGenerator={fieldNameGenerator("foldername")}
+                fieldName={"foldername"}
                 Submit & Continue
             </Button>
         </Flex>

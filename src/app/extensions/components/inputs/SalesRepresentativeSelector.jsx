@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Select,
   Tile
 } from "@hubspot/ui-extensions";
-import { setFieldValidity, setRequiredFieldName } from "../../utils";
+import { updateFormField, setRequiredFieldName, formReducer, initialState } from "../../utils";
 
-export const SalesRepresentativeSelector = ({ appJson, fieldNameGenerator, setValidity, context, runServerless, fetchProperties}) => {
+export const SalesRepresentativeSelector = ({ appJson, fieldName, setValidity, context, runServerless, fetchProperties, state, dispatch}) => {
 
     const [salesRepresentatives, setSalesRepresentatives] = useState([]);
     const [currentSalesRepresentative, setCurrentSalesRepresentative] = useState({
@@ -16,8 +16,7 @@ export const SalesRepresentativeSelector = ({ appJson, fieldNameGenerator, setVa
     const [showError, setShowError] = useState(false);
     const [validationMessage, setValidationMessage] = useState("");
     const [isValid, setIsValid] = useState(false);
-    const fieldName = setRequiredFieldName(fieldNameGenerator);
-    setFieldValidity(fieldName, setValidity, isValid);
+    updateFormField(dispatch, fieldName, isValid, currentSalesRepresentative);
     
     useEffect(() => {
         
@@ -30,7 +29,8 @@ export const SalesRepresentativeSelector = ({ appJson, fieldNameGenerator, setVa
             });
             if(serverlessFunction.status !== 'SUCCESS') {
                 setShowError(true);
-                setValidationMessage(serverlessFunction.message || "An error occurred, reload the page to try again");
+                console.log("serverlessFunction.message", serverlessFunction.message);
+                setValidationMessage("Please reload the page and see if this error resolves. If not, contact internal HS support.");
                 throw new Error(serverlessFunction.message);
             }
             //Grouped it by TeamID in case we want to split it by brand segment at some point
@@ -66,6 +66,11 @@ export const SalesRepresentativeSelector = ({ appJson, fieldNameGenerator, setVa
 
     }, []);
 
+    const handleSalesRepresentativeChange = (value) => {
+        let selectedSalesRepresentative = salesRepresentatives.find(salesRep => salesRep.value === value);
+        setCurrentSalesRepresentative(selectedSalesRepresentative);
+    }
+
     return (
         <Tile compact>
             <Select
@@ -74,7 +79,7 @@ export const SalesRepresentativeSelector = ({ appJson, fieldNameGenerator, setVa
                 tooltip="The sales representative that will get credit for this deal."
                 value={currentSalesRepresentative.value}
                 options={salesRepresentatives}
-                onChange={(value) => setCurrentSalesRepresentative(value)}
+                onChange={handleSalesRepresentativeChange}
                 required={true}
                 error={showError}
                 validationMessage={validationMessage}

@@ -12,6 +12,7 @@ import {
   Step1,
   Step2
 } from "./components/steps";
+import { stepReducer, initialState } from "./utils";
 
 // Define the extension to be run within the Hubspot CRM
 hubspot.extend(({ context, runServerlessFunction, actions }) => (
