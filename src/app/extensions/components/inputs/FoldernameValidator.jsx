@@ -6,7 +6,7 @@ import {
   Input,
   Button,
 } from "@hubspot/ui-extensions";
-import { updateFormField, setRequiredFieldName } from "../../utils";
+import { updateFormField } from "../../utils/reducers";
 
 export const FoldernameValidator = ({  id, setValidity, fieldName, context, runServerless, sendAlert, validInput, state, dispatch }) => {
 
@@ -31,6 +31,7 @@ export const FoldernameValidator = ({  id, setValidity, fieldName, context, runS
                 setValidationMessage(message);
                 return;
             }
+            setShowError(false);
             setIsValid(true);
             setValidationMessage(message);
         }

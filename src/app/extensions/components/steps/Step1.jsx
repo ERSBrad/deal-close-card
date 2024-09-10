@@ -12,8 +12,6 @@ import {
     CompanySelector,
 } from "../inputs";
 
-import { formReducer, formInitialState } from "../../utils";
-
 // Define the Extension component, taking in runServerless, context, & sendAlert as props
 export const Step1 = ({ 
   actions,
@@ -21,21 +19,16 @@ export const Step1 = ({
   runServerless,
   handleStepSubmission,
   fetchProperties,
-  appJson
+  appJson,
+  enableSubmit,
+  formState,
+  formDispatch
 }) => {
 
     /**
      * A system to add dynamic form validation to all form components.
      * Follow the props of the components to see how they interact with this system.
      */
-
-    const [enableSubmit, setEnableSubmit] = useState(false);
-    const [stepState, stepDispatch] = useReducer(formReducer, formInitialState);
-
-    useEffect(() => {
-        let shouldEnableSubmit = Object.values(stepState).every(field => field.valid);
-        setEnableSubmit(shouldEnableSubmit);
-    }, [stepState]);
 
     return (
         <Flex direction="column" gap="small" align="stretch">
@@ -44,8 +37,8 @@ export const Step1 = ({
                     fieldName={"foldername"}
                     context={context} 
                     runServerless={runServerless} 
-                    state={stepState}
-                    dispatch={stepDispatch}
+                    state={formState}
+                    dispatch={formDispatch}
                 />
             </Box>
             <Box flex={1}>
@@ -55,8 +48,8 @@ export const Step1 = ({
                     runServerless={runServerless} 
                     fetchProperties={actions.fetchCrmObjectProperties} 
                     appJson={appJson}
-                    state={stepState}
-                    dispatch={stepDispatch}
+                    state={formState}
+                    dispatch={formDispatch}
                     />
             </Box>
             <Flex direction="row" gap="small" flex={2}>
@@ -65,8 +58,8 @@ export const Step1 = ({
                     fieldName={"billingContact"}
                     context={context} 
                     runServerless={runServerless} 
-                    state={stepState}
-                    dispatch={stepDispatch}
+                    state={formState}
+                    dispatch={formDispatch}
                 />
             </Box>
             <Box flex={1}>
@@ -74,8 +67,8 @@ export const Step1 = ({
                     fieldName={"billingCompany"}
                     context={context} 
                     runServerless={runServerless} 
-                    state={stepState}
-                    dispatch={stepDispatch}
+                    state={formState}
+                    dispatch={formDispatch}
                 />
             </Box>
             </Flex>

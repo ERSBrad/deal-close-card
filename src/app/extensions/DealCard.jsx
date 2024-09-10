@@ -3,6 +3,7 @@ import {
   Flex,
   Box,
   Button,
+  Text,
   Form,
   hubspot,
   StepIndicator,
@@ -13,7 +14,7 @@ import {
   Step2
 } from "./components/steps";
 
-import { stepReducer } from "./utils";
+import { stepReducer, formReducer, formInitialState } from "./utils/reducers";
 
 // Define the extension to be run within the Hubspot CRM
 hubspot.extend(({ context, runServerlessFunction, actions }) => (
@@ -33,68 +34,79 @@ const Extension = ({
   runServerless, 
 }) => {
 
+  /**
+   * Convert this to an API call that pulls the sales teams IDs from the CRM via the portalId.
+   */
   const appJson = {
-    "settings": {
-      "teams": {
-        "sales": {
-          "ers": {
-            "id": "49960194"
-          },
-          "drs": {
-            "id": "49960165"
-          }
+    settings: {
+      teams: {
+        sales: {
+          ers: { id: "49960194" },
+          drs: { id: "49960165" }
         }
       }
     }
   };
 
-  const stepInitialState = { 
-    currentStep: 0,
-  };
-
-  const [multiStepFormState, multiStepFormDispatch] = useReducer(stepReducer, stepInitialState);
+  const [enableSubmit, setEnableSubmit] = useState(false);
+  const stepInitialState = { currentStep: 0 };
+  const [stepState, stepDispatch] = useReducer(stepReducer, stepInitialState);
+  const [formState, formDispatch] = useReducer(formReducer, formInitialState);
   const [currentStep, setCurrentStep] = useState(0);
-  const stepNames = [
-    "New Deal Information",
-    "Setup Line Items",
-    "Setup Other Items"
-  ];
+  const stepNames = ["Add Deal Information", "Setup Line Items", "Setup Other Items"];
+  const [unlockedSteps, setUnlockedSteps] = useState([]);
 
   useEffect(() => {
-    setCurrentStep(multiStepFormState.currentStep);
-  }, [multiStepFormState.currentStep]);
-
-  const [achievedSteps, setAchievedSteps] = useState([]);
-  const stepHasBeenAchieved = (step) => {
-    return achievedSteps.includes(step);
-  }
+      let shouldEnableSubmit = Object.values(formState).every(field => field.valid);
+      setEnableSubmit(shouldEnableSubmit);
+  }, [formState]);
 
   useEffect(() => {
-    let updatedAchievedSteps = achievedSteps;
-    updatedAchievedSteps.push(multiStepFormState.currentStep);
-    setAchievedSteps(updatedAchievedSteps);
+    setCurrentStep(stepState.currentStep);
+  }, [stepState.currentStep]);
+
+  useEffect(() => {
+    setUnlockedSteps((prevAchievedSteps) => {
+      if (!prevAchievedSteps.includes(currentStep)) {
+        return [...prevAchievedSteps, currentStep];
+      }
+      return prevAchievedSteps;
+    });
   }, [currentStep]);
 
-  const handleStepSubmission = () => {
-    sendAlert({ message: "Step Submitted", type: "success" });
+  useEffect(() => { 
+    console.log("formState", formState);
+  }, [formState]);
+
+  const stepIsUnlocked = (step) => {
+    return unlockedSteps.includes(step);
   }
 
-  const handleStepClick = (requestedStep) => {
-    console.log("requestedStep", requestedStep);
-    if (currentStep < requestedStep && stepHasBeenAchieved(requestedStep)) {
-      console.log("INCREMENT_STEP");
-      multiStepFormDispatch({ type: "INCREMENT_STEP", currentStep: currentStep, requestedStep: requestedStep });
-    } else if (currentStep > requestedStep) {
-      console.log("DECREMENT_STEP");
-      multiStepFormDispatch({ type: "DECREMENT_STEP", currentStep: currentStep, requestedStep: requestedStep });
-    }
+  const handleStepSubmission = () => {
+    formDispatch({ type: "CACHE_FORM_STEP", stepNumber: currentStep });
+    formDispatch({ type: "RESET_FORM_FIELDS" });
+    stepDispatch({ type: "INCREMENT_STEP", currentStep });
   };
 
+  const handleStepClick = (requestedStep) => {
+    let stepsUnlocked = stepIsUnlocked(requestedStep);
+    if(!stepsUnlocked) {
+      sendAlert({ message: `You Must ${stepNames[unlockedSteps.at(-1)]} First`, type: "warning" });
+      return;
+    }
+    if (requestedStep > currentStep) {
+      console.log("INCREMENT_STEP");
+      stepDispatch({ type: "INCREMENT_STEP", currentStep: currentStep, requestedStep: requestedStep });
+    } else if (requestedStep < currentStep) {
+      console.log("DECREMENT_STEP");
+      stepDispatch({ type: "DECREMENT_STEP", currentStep: currentStep, requestedStep: requestedStep });
+    }
+  };
   return (
     <Flex direction="column" gap="large" align="stretch">
       <Box alignSelf="center">
         <StepIndicator 
-          currentStep={currentStep} 
+          currentStep={currentStep}
           stepNames={stepNames}
           circleSize="large"
           variant="flush"
@@ -102,16 +114,33 @@ const Extension = ({
           onClick={(step) => handleStepClick(step)}
         />
       </Box>
-      <Form >
-        {/* Start splitting this into better components */}
-        <Step1
-          context={context} 
-          runServerless={runServerless} 
-          actions={actions}
-          appJson={appJson}
-          handleStepSubmission={handleStepSubmission}
-        />
+      <Form>
+        {currentStep === 0 && (
+          <Step1
+            context={context}
+            runServerless={runServerless}
+            actions={actions}
+            appJson={appJson}
+            handleStepSubmission={handleStepSubmission}
+            formState={formState}
+            formDispatch={formDispatch}
+            enableSubmit={enableSubmit}
+          />
+        )}
+        {currentStep === 1 && (
+          <Step2
+            context={context}
+            runServerless={runServerless}
+            actions={actions}
+            appJson={appJson}
+            handleStepSubmission={handleStepSubmission}
+            formState={formState}
+            formDispatch={formDispatch}
+            enableSubmit={enableSubmit}
+          />
+        )}
       </Form>
     </Flex>
   );
+
 };

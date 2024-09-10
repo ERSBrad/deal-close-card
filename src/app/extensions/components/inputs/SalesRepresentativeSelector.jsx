@@ -3,7 +3,7 @@ import {
   Select,
   Tile
 } from "@hubspot/ui-extensions";
-import { updateFormField, setRequiredFieldName, formReducer, formInitialState } from "../../utils";
+import { updateFormField, formReducer, formInitialState } from "../../utils/reducers";
 
 export const SalesRepresentativeSelector = ({ appJson, fieldName, setValidity, context, runServerless, fetchProperties, state, dispatch}) => {
 

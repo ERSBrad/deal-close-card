@@ -9,7 +9,7 @@ import {
 import {
     CrmActionButton,
 } from "@hubspot/ui-extensions/crm";
-import { updateFormField, setRequiredFieldName } from "../../utils";
+import { updateFormField } from "../../utils/reducers";
 
 export const CompanySelector = ({  id, setValidity, fieldName, context, runServerless, sendAlert, state, dispatch }) => {
 
