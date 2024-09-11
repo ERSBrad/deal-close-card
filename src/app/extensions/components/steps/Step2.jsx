@@ -27,7 +27,14 @@ export const Step2 = ({
     return (
         <Flex direction={'column'} gap={'medium'}>
             <Box>
-                <LineItems />
+                <LineItems 
+                    context={context}
+                    fieldName={'lineItems'}
+                    state={formState}
+                    dispatch={formDispatch}
+                    runServerless={runServerless}
+                    actions={actions}
+                />
             </Box>
         </Flex>
     );

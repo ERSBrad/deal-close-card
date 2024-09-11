@@ -74,9 +74,9 @@ const Extension = ({
     });
   }, [currentStep]);
 
-  useEffect(() => { 
+  /*useEffect(() => { 
     console.log("formState", formState);
-  }, [formState]);
+  }, [formState]);*/
 
   const stepIsUnlocked = (step) => {
     return unlockedSteps.includes(step);
@@ -115,7 +115,7 @@ const Extension = ({
         />
       </Box>
       <Form>
-        {currentStep === 0 && (
+        {/*currentStep === 0 && (
           <Step1
             context={context}
             runServerless={runServerless}
@@ -126,8 +126,8 @@ const Extension = ({
             formDispatch={formDispatch}
             enableSubmit={enableSubmit}
           />
-        )}
-        {currentStep === 1 && (
+        )*/}
+        {currentStep === 0 && (
           <Step2
             context={context}
             runServerless={runServerless}

@@ -1,13 +1,29 @@
 const axios = require('axios');
 
 exports.main = async (context = {}) => {
+  let id = context.parameters.currentObjectId;
   const token = process.env['PRIVATE_APP_ACCESS_TOKEN'];
 
+  //This should also be grabbing the current deals line items and returning them if they exist. Need to evaluate the complexity it would add to the code; like modifying an existing line item.
   const requestBody = {
-    operationName: 'MyQuery',
+    operationName: 'GetDealLineItems',
     query: `
-      query MyQuery {
+      query GetDealLineItems ($id: String!) {
         CRM {
+          deal(uniqueIdentifier: "id", uniqueIdentifierValue: $id) {
+            hs_num_of_associated_line_items
+            associations {
+              line_item_collection__primary {
+                items {
+                  hs_sku
+                  price
+                  name
+                  hs_product_id
+                  recurringbillingfrequency
+                }
+              }
+            }
+          }
           product_collection(filter: {hs_sku__not_null: "TRUE"}, limit:100 ) {
             items {
               hs_sku
@@ -20,7 +36,7 @@ exports.main = async (context = {}) => {
         }
       }
     `,
-    variables: {}
+    variables: {id}
   };
 
   try {
@@ -45,8 +61,19 @@ exports.main = async (context = {}) => {
       productId: item.hs_object_id,
     }));
 
+    const dealLineItems = {
+      numItems: responseBody.data.CRM.deal.hs_num_of_associated_line_items,
+      items: responseBody.data.CRM.deal.associations.line_item_collection__primary.items.map(item => ({
+        label: item.name,
+        value: item.hs_sku,
+        price: item.price,
+        frequency: item.recurringbillingfrequency ? item.recurringbillingfrequency.label : 'One Time',
+        productId: item.hs_product_id,
+      })),
+    };
 
-    return { lineItems };
+
+    return { lineItems, dealLineItems };
   } catch (error) {
     if (error.response) {
       console.error(JSON.stringify(error.response.data, null, 2));

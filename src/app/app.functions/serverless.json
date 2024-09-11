@@ -12,6 +12,10 @@
       "file": "fetchOwnersByTeam.js",
       "secrets": []
     },
+    "fetchLineItems": {
+      "file": "fetchLineItems.js",
+      "secrets": []
+    },
     "ersCheckFoldername": {
       "file": "ersCheckFoldername.js",
       "secrets": ["ERS_API_KEY"]
