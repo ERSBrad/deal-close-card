@@ -22,7 +22,9 @@ export const Step1 = ({
   appJson,
   enableSubmit,
   formState,
-  formDispatch
+  formDispatch,
+  currentStep,
+  handlePreviousStep
 }) => {
 
     /**
@@ -39,6 +41,7 @@ export const Step1 = ({
                     runServerless={runServerless} 
                     state={formState}
                     dispatch={formDispatch}
+                    currentStep={currentStep}
                 />
             </Box>
             <Box flex={1}>
@@ -50,6 +53,7 @@ export const Step1 = ({
                     appJson={appJson}
                     state={formState}
                     dispatch={formDispatch}
+                    currentStep={currentStep}
                     />
             </Box>
             <Flex direction="row" gap="small" flex={2}>
@@ -60,6 +64,7 @@ export const Step1 = ({
                     runServerless={runServerless} 
                     state={formState}
                     dispatch={formDispatch}
+                    currentStep={currentStep}
                 />
             </Box>
             <Box flex={1}>
@@ -69,18 +74,16 @@ export const Step1 = ({
                     runServerless={runServerless} 
                     state={formState}
                     dispatch={formDispatch}
+                    currentStep={currentStep}
                 />
             </Box>
             </Flex>
-            <Button
-                disabled={!enableSubmit}
-                variant={"primary"}
-                type={"submit"}
-                onClick={handleStepSubmission}
-            >
-                
-                Submit & Continue
-            </Button>
+            <Box alignSelf="center">
+                {(currentStep > 0) && (
+                    <Button variant="secondary" onClick={handlePreviousStep}>Previous Step</Button>
+                )}
+                <Button variant="primary" onClick={handleStepSubmission} disabled={!enableSubmit}>Submit & Continue</Button>
+            </Box>
         </Flex>
     );
 };

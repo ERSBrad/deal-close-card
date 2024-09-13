@@ -11,11 +11,11 @@ import {
 } from "@hubspot/ui-extensions/crm";
 import { updateFormField } from "../../utils/reducers";
 
-export const CompanySelector = ({  id, setValidity, fieldName, context, runServerless, sendAlert, state, dispatch }) => {
+export const CompanySelector = ({  fieldName, context, runServerless, sendAlert, currentStep, state, dispatch }) => {
 
     const [loading, setLoading] = useState(true);
     const [companies, setCompanies] = useState([]);
-    const [selectedCompany, setSelectedCompany] = useState({
+    const [selectedCompany, setSelectedCompany] = useState(state[currentStep]?.[fieldName]?.value || {
         value: "",
         label: "",
         properties: {}
@@ -24,7 +24,7 @@ export const CompanySelector = ({  id, setValidity, fieldName, context, runServe
     //Maybe change below to useState({type: "valid", message: ""}); to eliminate showError? type:"error" for showing error
     const [validationMessage, setValidationMessage] = useState("");
     const [isValid, setIsValid] = useState(false);
-    updateFormField(dispatch, fieldName, isValid, selectedCompany);
+    updateFormField(dispatch, currentStep, fieldName, isValid, selectedCompany);
 
     useEffect(() => {
         async function fetchCompanies() {
@@ -40,7 +40,9 @@ export const CompanySelector = ({  id, setValidity, fieldName, context, runServe
                     break;
                 case 1:
                     setCompanies(associatedCompanies);
-                    setSelectedCompany(associatedCompanies[0]);
+                    if(selectedCompany.value === "") {
+                        setSelectedCompany(associatedCompanies[0]);
+                    }
                     setIsValid(true);
                     break;
                 default:
@@ -50,6 +52,12 @@ export const CompanySelector = ({  id, setValidity, fieldName, context, runServe
             setLoading(false);
         }
         fetchCompanies();
+    }, []);
+
+    useEffect(() => {
+        let existingValue = state[currentStep]?.[fieldName]?.value;
+        if(!existingValue) return;
+        setSelectedCompany(existingValue);
     }, []);
 
     const handleSelectChange = (value) => {

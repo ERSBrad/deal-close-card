@@ -13,26 +13,15 @@ export const formReducer = (state, action) => {
     case "SET_FIELD":
       return {
         ...state,
-        [action.fieldName]: {
-          valid: action.valid,
-          value: action.value,
-          required: action.required
+        [action.currentStep]: {
+          ...state[action.currentStep],
+          [action.fieldName]: {
+            valid: action.valid,
+            value: action.value,
+            required: action.required
+          }
         }
       };
-
-    case "CACHE_FORM_STEP":
-      return {
-        ...state,
-        cachedSteps: {
-          ...state.cachedSteps,
-          [action.stepNumber]: { ...state }
-        },
-      };
-
-    case "RESET_FORM_FIELDS":
-      return {
-        "cachedSteps": state["cachedSteps"]
-      }
     default:
       return state;
   }
@@ -45,10 +34,10 @@ export const formReducer = (state, action) => {
  * @param {*} value 
  * @param {*} dispatch 
  */
-export const updateFormField = (dispatch, fieldName, valid, value, required=true) => {
+export const updateFormField = (dispatch, currentStep, fieldName, valid, value, required=true) => {
   useEffect(() => {
     if(fieldName === "") return;
-    dispatch({ type: "SET_FIELD", fieldName, valid, required, value });
+    dispatch({ type: "SET_FIELD", currentStep, fieldName, valid, required, value });
   }, [fieldName, valid, required, value]);
 };
 

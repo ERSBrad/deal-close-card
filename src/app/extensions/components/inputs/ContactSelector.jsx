@@ -12,11 +12,11 @@ import {
 
 import { updateFormField } from "../../utils/reducers";
 
-export const ContactSelector = ({ id, setValidity, fieldName, context, runServerless, state, dispatch }) => {
+export const ContactSelector = ({ id, setValidity, fieldName, context, runServerless, currentStep, state, dispatch }) => {
 
     const [loading, setLoading] = useState(true);
     const [contacts, setContacts] = useState([]);
-    const [selectedContact, setSelectedContact] = useState({
+    const [selectedContact, setSelectedContact] = useState(state[currentStep]?.[fieldName]?.value || {
         value: "",
         label: "",
         properties: {}
@@ -24,7 +24,7 @@ export const ContactSelector = ({ id, setValidity, fieldName, context, runServer
     const [showError, setShowError] = useState(false);
     const [validationMessage, setValidationMessage] = useState("");
     const [isValid, setIsValid] = useState(false);
-    updateFormField(dispatch, fieldName, isValid, selectedContact);
+    updateFormField(dispatch, currentStep, fieldName, isValid, selectedContact);
 
     let placeholderText = loading ? "Loading..." : "Select a contact";
 
@@ -42,7 +42,9 @@ export const ContactSelector = ({ id, setValidity, fieldName, context, runServer
                     break;
                 case 1:
                     setContacts(associatedContacts)
-                    setSelectedContact(associatedContacts[0]);
+                    if(selectedContact.value === "") {
+                        setSelectedContact(associatedContacts[0]);
+                    }
                     setIsValid(true);
                     break;
                 default:

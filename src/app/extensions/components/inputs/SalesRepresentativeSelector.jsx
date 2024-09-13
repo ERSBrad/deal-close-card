@@ -5,10 +5,10 @@ import {
 } from "@hubspot/ui-extensions";
 import { updateFormField, formReducer, formInitialState } from "../../utils/reducers";
 
-export const SalesRepresentativeSelector = ({ appJson, fieldName, setValidity, context, runServerless, fetchProperties, state, dispatch}) => {
+export const SalesRepresentativeSelector = ({ appJson, fieldName, setValidity, context, runServerless, fetchProperties, currentStep, state, dispatch}) => {
 
     const [salesRepresentatives, setSalesRepresentatives] = useState([]);
-    const [currentSalesRepresentative, setCurrentSalesRepresentative] = useState({
+    const [currentSalesRepresentative, setCurrentSalesRepresentative] = useState(state[currentStep]?.[fieldName]?.value || {
         value: "",
         label: "",
         properties: {}
@@ -16,10 +16,9 @@ export const SalesRepresentativeSelector = ({ appJson, fieldName, setValidity, c
     const [showError, setShowError] = useState(false);
     const [validationMessage, setValidationMessage] = useState("");
     const [isValid, setIsValid] = useState(false);
-    updateFormField(dispatch, fieldName, isValid, currentSalesRepresentative);
+    updateFormField(dispatch, currentStep, fieldName, isValid, currentSalesRepresentative);
     
     useEffect(() => {
-        
         async function determineSalesRepresentative() {
             let teams = appJson.settings.teams.sales;
             let teamIds = [];
@@ -59,7 +58,9 @@ export const SalesRepresentativeSelector = ({ appJson, fieldName, setValidity, c
                 }
             }
             setSalesRepresentatives(allSalesRepresentativesInTeams);
-            setCurrentSalesRepresentative(suggestedSalesRepresentative);
+            if(currentSalesRepresentative.value === "") {
+                setCurrentSalesRepresentative(suggestedSalesRepresentative);
+            }
             setIsValid(true);
         }
         determineSalesRepresentative();

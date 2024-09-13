@@ -48,17 +48,20 @@ const Extension = ({
     }
   };
 
-  const [enableSubmit, setEnableSubmit] = useState(false);
   const stepInitialState = { currentStep: 0 };
+  const [enableSubmit, setEnableSubmit] = useState(false);
   const [stepState, stepDispatch] = useReducer(stepReducer, stepInitialState);
   const [formState, formDispatch] = useReducer(formReducer, formInitialState);
   const [currentStep, setCurrentStep] = useState(0);
-  const stepNames = ["Add Deal Information", "Setup Line Items", "Setup Other Items"];
+  const stepNames = ["Add Deal Information", "Add Services Sold", "Confirm Billing Information"];
   const [unlockedSteps, setUnlockedSteps] = useState([]);
 
   useEffect(() => {
-      let shouldEnableSubmit = Object.values(formState).every(field => field.valid);
-      setEnableSubmit(shouldEnableSubmit);
+    if(!formState.hasOwnProperty(currentStep)) return;
+    console.log("formState", formState);
+    let currentStepsFormFields = formState[currentStep];
+    let shouldEnableSubmit = Object.values(currentStepsFormFields).every(field => field.valid);
+    setEnableSubmit(shouldEnableSubmit);
   }, [formState]);
 
   useEffect(() => {
@@ -83,10 +86,12 @@ const Extension = ({
   }
 
   const handleStepSubmission = () => {
-    formDispatch({ type: "CACHE_FORM_STEP", stepNumber: currentStep });
-    formDispatch({ type: "RESET_FORM_FIELDS" });
     stepDispatch({ type: "INCREMENT_STEP", currentStep });
   };
+
+  const handlePreviousStep = () => {
+    stepDispatch({ type: "DECREMENT_STEP", currentStep });
+  }
 
   const handleStepClick = (requestedStep) => {
     let stepsUnlocked = stepIsUnlocked(requestedStep);
@@ -115,7 +120,7 @@ const Extension = ({
         />
       </Box>
       <Form>
-        {/*currentStep === 0 && (
+        {currentStep === 1 && (
           <Step1
             context={context}
             runServerless={runServerless}
@@ -125,8 +130,10 @@ const Extension = ({
             formState={formState}
             formDispatch={formDispatch}
             enableSubmit={enableSubmit}
+            currentStep={currentStep}
+            handlePreviousStep={handlePreviousStep}
           />
-        )*/}
+        )}
         {currentStep === 0 && (
           <Step2
             context={context}
@@ -137,6 +144,8 @@ const Extension = ({
             formState={formState}
             formDispatch={formDispatch}
             enableSubmit={enableSubmit}
+            currentStep={currentStep}
+            handlePreviousStep={handlePreviousStep}
           />
         )}
       </Form>

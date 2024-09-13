@@ -21,16 +21,16 @@ import {
 } from '@hubspot/ui-extensions';
 import { updateFormField } from '../../utils/reducers';
 
-export const LineItems = ({ context, state, fieldName, dispatch, runServerless, actions }) => {
+export const LineItems = ({ context, state, fieldName, dispatch, runServerless, currentStep, actions }) => {
 
     const [loading, setLoading] = useState(true);
     const [valid, setValid] = useState(false);
     const [error, setError] = useState('');
     const [validationMessage, setValidationMessage] = useState("");
     const [productList, setProductList] = useState([]);
-    const [lineItems, setLineItems] = useState([{ value: '', price: 0, frequency: '', label: '', productId: '' }]);
+    const [lineItems, setLineItems] = useState(state[currentStep]?.[fieldName]?.value || []);
     const [showRemovalConfirmation, setShowRemovalConfirmation] = useState(false);
-    updateFormField(dispatch, fieldName, valid, lineItems);
+    updateFormField(dispatch, currentStep, fieldName, valid, lineItems);
    
     useEffect(() => {
         const loadLineItemList = async () => {
@@ -44,13 +44,19 @@ export const LineItems = ({ context, state, fieldName, dispatch, runServerless, 
             }
             setError(false);
             setProductList(serverlessFunction.response.lineItems);
-            if(serverlessFunction.response.dealLineItems.numItems > 0) {
+
+            /**
+             * Continue tomorrow: I was working on repopulating data from previous steps, it should all work now with the exteption of WebsiteTemplateSelector. All I need now is to test with a "final" step where the data is confirmed (maybe?) and the form actually submits.
+             * Figure out where workato webhooks go, and how to test them. Then setup a recipe because their's are trash.
+             */
+            if(serverlessFunction.response.dealLineItems.numItems > 0 && ( lineItems.length > 0 && lineItems[0]?.value === '')) {
                 setLineItems(serverlessFunction.response.dealLineItems.items);
+                setValid(true);
             }
             
         }
         loadLineItemList();
-    }, []);
+    }, [])
 
     useEffect(() => {
         console.log("showRemovalConfirmation: ", showRemovalConfirmation);
@@ -164,6 +170,7 @@ export const LineItems = ({ context, state, fieldName, dispatch, runServerless, 
 const useEffectLineItems = (lineItems, addLineItemRow, setValid) => {
     useEffect(() => {
         const validateLineItems = () => { 
+            console.log(lineItems);
             if(lineItems.length < 1) {
                 addLineItemRow();
                 setValid(false);
