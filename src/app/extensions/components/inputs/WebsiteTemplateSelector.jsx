@@ -2,11 +2,11 @@ import React, { useEffect, useState } from "react";
 import {
     Alert
 } from "@hubspot/ui-extensions";
-import { formInitialState, updateFormField } from "../../utils/reducers";
+import { updateFormField } from "../../utils/reducers";
 import { CrmPropertyList } from "@hubspot/ui-extensions/crm";
 
 
-export const WebsiteTemplateSelector = ({ fieldName, currentStep, state, dispatch, actions }) => {
+export const WebsiteTemplateSelector = ({ fieldName, currentStep, dispatch, actions }) => {
   /**
    * Consider using useState([{ label: '', value: '', name: '' }]) instead of an object?
    */
@@ -30,10 +30,7 @@ export const WebsiteTemplateSelector = ({ fieldName, currentStep, state, dispatc
   }, []);
 
   useEffect(() => {
-    console.log("properties", properties);
-    console.log("propertyCount", Object.keys(properties).length);
     const allPropertiesValid = Object.values(properties).every(value => value);
-    console.log(allPropertiesValid);
     setValid(allPropertiesValid);
   }, [properties]);
 
@@ -44,6 +41,7 @@ export const WebsiteTemplateSelector = ({ fieldName, currentStep, state, dispatc
       setError(true);
       return;
     }
+    setError(false);
     let propertyClone = properties;
     propertyClone = { ...propertyClone, ...updatedProperties };
     setProperties(propertyClone);

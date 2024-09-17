@@ -18,8 +18,6 @@ export const Step1 = ({
   context,
   runServerless,
   handleStepSubmission,
-  fetchProperties,
-  appJson,
   enableSubmit,
   formState,
   formDispatch,
@@ -49,8 +47,7 @@ export const Step1 = ({
                     fieldName={"salesRepresentative"}
                     context={context} 
                     runServerless={runServerless} 
-                    fetchProperties={actions.fetchCrmObjectProperties} 
-                    appJson={appJson}
+                    fetchProperties={actions.fetchCrmObjectProperties}
                     state={formState}
                     dispatch={formDispatch}
                     currentStep={currentStep}

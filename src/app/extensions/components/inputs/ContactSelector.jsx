@@ -33,7 +33,7 @@ export const ContactSelector = ({ id, setValidity, fieldName, context, runServer
             let serverlessFunction = await runServerless({
                 name: "fetchAssociatedContacts", parameters: { currentObjectId: context.crm.objectId }
             });
-            if(serverlessFunction.status !== 'SUCCESS') throw new Error(serverlessFunction.message);
+            if(serverlessFunction.status === "ERROR") throw new Error(serverlessFunction.message);
             let associatedContacts = serverlessFunction.response;
             switch(associatedContacts.length) {
                 case 0:
@@ -56,6 +56,15 @@ export const ContactSelector = ({ id, setValidity, fieldName, context, runServer
         }
         fetchContacts();
     }, []);
+
+    const handleCrmActionButtonError = async (errors) => {
+        console.log(errors);
+        let errorMessage = "";
+        errors.forEach((error) => {
+            errorMessage += `${error}\n`;
+        })
+        sendAlert({message: errorMessage, type: "danger"});
+    }
 
     const handleSelectChange = (value) => {
         let selectedContact = contacts.find(contact => contact.value === value);

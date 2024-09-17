@@ -28,56 +28,54 @@ export const LineItems = ({ context, state, fieldName, dispatch, runServerless, 
     const [error, setError] = useState('');
     const [validationMessage, setValidationMessage] = useState("");
     const [productList, setProductList] = useState([]);
+    const [enableClear, setEnableClear] = useState(false);
     const [lineItems, setLineItems] = useState(state[currentStep]?.[fieldName]?.value || []);
-    const [showRemovalConfirmation, setShowRemovalConfirmation] = useState(false);
     updateFormField(dispatch, currentStep, fieldName, valid, lineItems);
    
     useEffect(() => {
         const loadLineItemList = async () => {
             let serverlessFunction = await runServerless({ name: "fetchLineItems", parameters: { currentObjectId: context.crm.objectId } });
-            console.log("Serverless Function: ", serverlessFunction);
-            if(serverlessFunction.status !== "SUCCESS") {
+            if(serverlessFunction.status === "ERROR") {
                 setError(true);
                 setLoading(false);
                 setValidationMessage("Failed to fetch line items. Unable to proceed, please try again in a while to see if the problem has been resolved. Odds are that it's an issue on HubSpot's end, check the console for more information.");
                 throw new Error(serverlessFunction.message);
             }
             setError(false);
-            setProductList(serverlessFunction.response.lineItems);
+            setProductList(serverlessFunction.response.products);
 
             /**
              * Continue tomorrow: I was working on repopulating data from previous steps, it should all work now with the exteption of WebsiteTemplateSelector. All I need now is to test with a "final" step where the data is confirmed (maybe?) and the form actually submits.
              * Figure out where workato webhooks go, and how to test them. Then setup a recipe because their's are trash.
              */
-            if(serverlessFunction.response.dealLineItems.numItems > 0 && ( lineItems.length > 0 && lineItems[0]?.value === '')) {
+            if(serverlessFunction.response.dealLineItems.numItems > 0 && (!lineItems.length || lineItems[0]?.value === '')) {
                 setLineItems(serverlessFunction.response.dealLineItems.items);
                 setValid(true);
             }
-            
         }
         loadLineItemList();
     }, [])
-
-    useEffect(() => {
-        console.log("showRemovalConfirmation: ", showRemovalConfirmation);
-    }, [showRemovalConfirmation])
 
     const addLineItemRow = () => {
         const newLineItems = [...lineItems, { value: '', price: 0, frequency: '', label: '', productId: '' }];
         setLineItems(newLineItems);
     };
-    useEffectLineItems(lineItems, addLineItemRow, setValid);
+    useEffectLineItems(lineItems, addLineItemRow, setValid, setEnableClear);
 
     const handleSelectChange = (index, value) => {
         const selectedItem = productList.find((item) => item.value === value);
-        console.log(selectedItem);
+        if(!selectedItem) {
+            console.log("No matching item found. A reload will mostly fix this, if not contact an administrator.");
+        }
         const updatedItem = {
           ...lineItems[index],
+          id: selectedItem.id || '',
+          label: selectedItem.label || '',
           value,
-          price: selectedItem?.price || 0,
-          frequency: selectedItem?.frequency || '',
-          label: selectedItem?.label || '',
-          productId: selectedItem?.productId || '',
+          price: selectedItem.price || 0,
+          frequency: selectedItem.frequency || '',
+          isPlanType: selectedItem.isPlanType || '',
+          productId: selectedItem.productId || '',
         };
         updateLineItem(index, updatedItem);
     };
@@ -140,7 +138,10 @@ export const LineItems = ({ context, state, fieldName, dispatch, runServerless, 
             </Box>
             <Box alignSelf="end">
                 <Button variant="primary" onClick={addLineItemRow}>+ Add Line Item</Button>
-                <Button variant="destructive" overlay={
+                <Button 
+                variant="destructive"
+                disabled={!enableClear}
+                overlay={
                     <Modal 
                     id="clearLineItemModal"
                     title="Are you sure you want to clear all line items?"
@@ -167,10 +168,10 @@ export const LineItems = ({ context, state, fieldName, dispatch, runServerless, 
 
 }
 
-const useEffectLineItems = (lineItems, addLineItemRow, setValid) => {
+const useEffectLineItems = (lineItems, addLineItemRow, setValid, setEnableClear) => {
+    console.log("lineItems", lineItems);
     useEffect(() => {
-        const validateLineItems = () => { 
-            console.log(lineItems);
+        const validateLineItems = () => {
             if(lineItems.length < 1) {
                 addLineItemRow();
                 setValid(false);
@@ -181,6 +182,11 @@ const useEffectLineItems = (lineItems, addLineItemRow, setValid) => {
                 } else {
                     setValid(true);
                 }
+            }
+            if(lineItems.length >= 1 && (lineItems.length && lineItems[0]?.value !== '')) {
+                setEnableClear(true);
+            } else {
+                setEnableClear(false);
             }
         }
         validateLineItems();

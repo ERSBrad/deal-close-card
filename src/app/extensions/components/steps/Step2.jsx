@@ -15,11 +15,8 @@ import {
 // Define the Extension component, taking in runServerless, context, & sendAlert as props
 export const Step2 = ({ 
   actions,
-  context, 
-  sendAlert,
+  context,
   runServerless,
-  fetchProperties,
-  setValidity,
   handleStepSubmission,
   formState,
   formDispatch,
@@ -27,6 +24,10 @@ export const Step2 = ({
   currentStep,
   handlePreviousStep
 }) => {
+
+    const createErsFolder = async (formState) => {
+
+    }
 
     return (
         <Flex direction={'column'} gap={'medium'}>
@@ -59,7 +60,7 @@ export const Step2 = ({
                 {(currentStep > 0) && (
                     <Button variant="secondary" onClick={handlePreviousStep}>Previous Step</Button>
                 )}
-                <Button variant="primary" onClick={handleStepSubmission} disabled={!enableSubmit}>Submit & Continue</Button>
+                <Button variant="primary" type="submit" disabled={!enableSubmit}>Submit & Continue</Button>
             </Box>
         </Flex>
     );

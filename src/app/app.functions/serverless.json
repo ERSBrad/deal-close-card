@@ -19,6 +19,10 @@
     "ersCheckFoldername": {
       "file": "ersCheckFoldername.js",
       "secrets": ["ERS_API_KEY"]
+    },
+    "ersCreateFolder": {
+      "file": "ersCreateFolder.js",
+      "secrets": ["ERS_API_KEY"]
     }
   }
 }

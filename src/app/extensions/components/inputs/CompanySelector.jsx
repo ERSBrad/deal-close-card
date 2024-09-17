@@ -31,7 +31,7 @@ export const CompanySelector = ({  fieldName, context, runServerless, sendAlert,
             let serverlessFunction = await runServerless({
                 name: "fetchAssociatedCompanies", parameters: { currentObjectId: context.crm.objectId }
             });
-            if(serverlessFunction.status !== 'SUCCESS') throw new Error(serverlessFunction.message);
+            if(serverlessFunction.status === "ERROR") throw new Error(serverlessFunction.message);
             let associatedCompanies = serverlessFunction.response;
             switch(associatedCompanies.length) {
                 case 0:

@@ -39,6 +39,7 @@ export const FoldernameValidator = ({  id, setValidity, fieldName, context, runS
     }
 
     useEffect(() => {
+        setFoldername(foldername.toLowerCase());
         checkFoldername();
     }, [foldername]);
     

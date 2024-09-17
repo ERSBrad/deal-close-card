@@ -15,11 +15,13 @@ exports.main = async (context = {}) => {
             associations {
               line_item_collection__primary {
                 items {
+                  hs_object_id
                   hs_sku
                   price
                   name
                   hs_product_id
                   recurringbillingfrequency
+                  isplantype
                 }
               }
             }
@@ -30,7 +32,8 @@ exports.main = async (context = {}) => {
               name
               price
               recurringbillingfrequency
-              hs_object_id 
+              hs_object_id
+              isplantype
             }
           }
         }
@@ -53,27 +56,40 @@ exports.main = async (context = {}) => {
       throw new Error('Invalid response structure');
     }
 
-    const lineItems = responseBody.data.CRM.product_collection.items.map(item => ({
-      label: item.name,
-      value: item.hs_sku,
-      price: item.price,
-      frequency: item.recurringbillingfrequency ? item.recurringbillingfrequency.label : 'One Time',
-      productId: item.hs_object_id,
-    }));
-
-    const dealLineItems = {
-      numItems: responseBody.data.CRM.deal.hs_num_of_associated_line_items,
-      items: responseBody.data.CRM.deal.associations.line_item_collection__primary.items.map(item => ({
+    const products = responseBody.data.CRM.product_collection.items.map(item => { 
+      return {
         label: item.name,
         value: item.hs_sku,
         price: item.price,
         frequency: item.recurringbillingfrequency ? item.recurringbillingfrequency.label : 'One Time',
-        productId: item.hs_product_id,
-      })),
+        isPlanType: item.isplantype,
+        productId: item.hs_object_id,
+        existingLineItem: false,
+      };
+    });
+
+    const dealLineItems = {
+      numItems: responseBody.data.CRM.deal.hs_num_of_associated_line_items,
+      items: responseBody.data.CRM.deal.associations.line_item_collection__primary.items.map(item => {
+        const lineItemsProductId = item.hs_product_id;
+        let lineItemsPlanType = item.isplantype;
+        if(!lineItemsPlanType) {
+          const lineItemsProduct = products.find(product => product.productId === lineItemsProductId);
+          lineItemsPlanType = lineItemsProduct && lineItemsProduct.isPlanType;
+        }
+        return {
+          label: item.name,
+          value: item.hs_sku,
+          price: item.price,
+          frequency: item.recurringbillingfrequency ? item.recurringbillingfrequency.label : 'One Time',
+          isPlanType: lineItemsPlanType,
+          productId: lineItemsProductId,
+          id: item.hs_object_id
+        };
+      }),
     };
 
-
-    return { lineItems, dealLineItems };
+    return { products, dealLineItems };
   } catch (error) {
     if (error.response) {
       console.error(JSON.stringify(error.response.data, null, 2));

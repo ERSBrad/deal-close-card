@@ -5,7 +5,7 @@ import {
 } from "@hubspot/ui-extensions";
 import { updateFormField, formReducer, formInitialState } from "../../utils/reducers";
 
-export const SalesRepresentativeSelector = ({ appJson, fieldName, setValidity, context, runServerless, fetchProperties, currentStep, state, dispatch}) => {
+export const SalesRepresentativeSelector = ({ context, fieldName, runServerless, fetchProperties, currentStep, state, dispatch}) => {
 
     const [salesRepresentatives, setSalesRepresentatives] = useState([]);
     const [currentSalesRepresentative, setCurrentSalesRepresentative] = useState(state[currentStep]?.[fieldName]?.value || {
@@ -20,13 +20,13 @@ export const SalesRepresentativeSelector = ({ appJson, fieldName, setValidity, c
     
     useEffect(() => {
         async function determineSalesRepresentative() {
-            let teams = appJson.settings.teams.sales;
+            let teams = context.settings.teams.sales;
             let teamIds = [];
             Object.keys(teams).forEach((team) => teamIds.push(teams[team].id));
             const serverlessFunction = await runServerless({
                 name: "fetchOwnersByTeam", parameters: { teamIds: teamIds }
             });
-            if(serverlessFunction.status !== 'SUCCESS') {
+            if(serverlessFunction.status === "ERROR") {
                 setShowError(true);
                 console.log("serverlessFunction.message", serverlessFunction.message);
                 setValidationMessage("Please reload the page and see if this error resolves. If not, contact internal HS support.");
