@@ -51,9 +51,8 @@ exports.main = async (context = {}) => {
     });
 
     const responseBody = response.data;
-
-    if (!responseBody.data || !responseBody.data.CRM || !responseBody.data.CRM.product_collection || !responseBody.data.CRM.product_collection.items) {
-      throw new Error('Invalid response structure');
+    if(responseBody.errors && responseBody.errors.length > 0) {
+      throw new Error(responseBody.errors[0].message);
     }
 
     const products = responseBody.data.CRM.product_collection.items.map(item => { 
@@ -78,24 +77,26 @@ exports.main = async (context = {}) => {
           lineItemsPlanType = lineItemsProduct && lineItemsProduct.isPlanType;
         }
         return {
+
+          id: item.hs_object_id,
           label: item.name,
           value: item.hs_sku,
           price: item.price,
           frequency: item.recurringbillingfrequency ? item.recurringbillingfrequency.label : 'One Time',
           isPlanType: lineItemsPlanType,
-          productId: lineItemsProductId,
-          id: item.hs_object_id
+          productId: lineItemsProductId
         };
       }),
     };
 
     return { products, dealLineItems };
   } catch (error) {
+    console.log(error);
     if (error.response) {
       console.error(JSON.stringify(error.response.data, null, 2));
     } else {
       console.error(error.message);
     }
-    throw error;
+    throw new Error(error.message);
   }
 };

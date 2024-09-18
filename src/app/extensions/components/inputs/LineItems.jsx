@@ -26,10 +26,11 @@ export const LineItems = ({ context, state, fieldName, dispatch, runServerless, 
     const [loading, setLoading] = useState(true);
     const [valid, setValid] = useState(false);
     const [error, setError] = useState('');
+    const [enableClear, setEnableClear] = useState(false);
     const [validationMessage, setValidationMessage] = useState("");
     const [productList, setProductList] = useState([]);
-    const [enableClear, setEnableClear] = useState(false);
     const [lineItems, setLineItems] = useState(state[currentStep]?.[fieldName]?.value || []);
+    const [clearedLineItems, setClearedLineItems] = useState([]);
     updateFormField(dispatch, currentStep, fieldName, valid, lineItems);
    
     useEffect(() => {
@@ -37,17 +38,12 @@ export const LineItems = ({ context, state, fieldName, dispatch, runServerless, 
             let serverlessFunction = await runServerless({ name: "fetchLineItems", parameters: { currentObjectId: context.crm.objectId } });
             if(serverlessFunction.status === "ERROR") {
                 setError(true);
-                setLoading(false);
-                setValidationMessage("Failed to fetch line items. Unable to proceed, please try again in a while to see if the problem has been resolved. Odds are that it's an issue on HubSpot's end, check the console for more information.");
+                setValidationMessage("An error occurred while fetching line items, contact an administrator or check the console for more information.");
                 throw new Error(serverlessFunction.message);
             }
             setError(false);
             setProductList(serverlessFunction.response.products);
 
-            /**
-             * Continue tomorrow: I was working on repopulating data from previous steps, it should all work now with the exteption of WebsiteTemplateSelector. All I need now is to test with a "final" step where the data is confirmed (maybe?) and the form actually submits.
-             * Figure out where workato webhooks go, and how to test them. Then setup a recipe because their's are trash.
-             */
             if(serverlessFunction.response.dealLineItems.numItems > 0 && (!lineItems.length || lineItems[0]?.value === '')) {
                 setLineItems(serverlessFunction.response.dealLineItems.items);
                 setValid(true);
@@ -65,17 +61,17 @@ export const LineItems = ({ context, state, fieldName, dispatch, runServerless, 
     const handleSelectChange = (index, value) => {
         const selectedItem = productList.find((item) => item.value === value);
         if(!selectedItem) {
-            console.log("No matching item found. A reload will mostly fix this, if not contact an administrator.");
+            console.log("No matching item found in the list of products. A reload will mostly fix this, if not contact an administrator.");
         }
         const updatedItem = {
           ...lineItems[index],
-          id: selectedItem.id || '',
+          id: selectedItem.id || null,
           label: selectedItem.label || '',
-          value,
+          value: value || '',
           price: selectedItem.price || 0,
           frequency: selectedItem.frequency || '',
-          isPlanType: selectedItem.isPlanType || '',
-          productId: selectedItem.productId || '',
+          isPlanType: selectedItem.isPlanType || false,
+          productId: selectedItem.productId || null,
         };
         updateLineItem(index, updatedItem);
     };

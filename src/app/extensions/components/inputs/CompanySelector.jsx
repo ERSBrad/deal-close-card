@@ -47,22 +47,16 @@ export const CompanySelector = ({  fieldName, context, runServerless, sendAlert,
                     break;
                 default:
                     setCompanies(associatedCompanies);
-                    setIsValid(true);
             }
             setLoading(false);
         }
         fetchCompanies();
     }, []);
 
-    useEffect(() => {
-        let existingValue = state[currentStep]?.[fieldName]?.value;
-        if(!existingValue) return;
-        setSelectedCompany(existingValue);
-    }, []);
-
     const handleSelectChange = (value) => {
         let selectedCompany = companies.find(company => company.value === value);
         setSelectedCompany(selectedCompany);
+        setIsValid(true);
     }
 
     const handleCrmActionButtonError = async (errors) => {
@@ -75,7 +69,6 @@ export const CompanySelector = ({  fieldName, context, runServerless, sendAlert,
     }
     //Figure out how to ensure associations between all objects
     //Figure out how to make folders not-required in deal closed cards
-    let hasSelectedCompany = selectedCompany.value !== "";
     let placeholderText = loading ? "Loading..." : "Select a company";
     
     return (

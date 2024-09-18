@@ -1,10 +1,11 @@
-let axios = require('axios');
-let qs = require('querystring');
-
+const axios = require('axios');
+const qs = require('querystring');
+const hubspot = require('@hubspot/api-client');
+const path = require('path');
 
 exports.main = async (context = {}) => {
-
-  let { formState: formData, dealProperties } = context.parameters;
+  
+  let { formState: formData, dealProperties, clientContext } = context.parameters;
 
   Object.keys(formData).forEach(key => {
     if (typeof formData[key] === 'object' && !Array.isArray(formData[key]) && formData[key] !== null) {
@@ -13,26 +14,118 @@ exports.main = async (context = {}) => {
     }
   });
 
-  //const createErsFolderResponseData = await createErsFolder(formData);
-  const upsertLineItemsResponseData = await upsertHubSpotLineItems(formData, dealProperties);
+  hubspotClient = new hubspot.Client({ accessToken: process.env['PRIVATE_APP_ACCESS_TOKEN'] });
 
-  return createErsFolderResponseData;
+  try {
+    const upsertLineItemsResponseData = await upsertHubSpotLineItems(hubspotClient, formData, dealProperties);
+    const upsertHubSpotPropertiesResponse = await upsertHubSpotProperties(hubspotClient, formData, dealProperties, clientContext);
+    const createErsFolderResponseData = await createErsFolder(formData);
+  } catch(error) {
+    console.error(error);
+    throw new Error(error.message);
+  }
+  return { message: "Folder created and properties upserted successfully." };
   
 };
 
-const upsertHubSpotLineItems = async (formData, dealProperties) => {
+const upsertHubSpotLineItems = async (hubspotClient, formData, dealProperties) => {
+
   let lineItems = formData.lineItems?.value;
   if(!lineItems || lineItems.length === 0) throw new Error("No line items found.");
-  let batchInputObjectForCreate = [];
+  let batchInputObjectForDeleteInputs = [];
+  let batchInputObjectForUpdateInputs = [];
+  let batchInputObjectForInsertInputs = [];
+  let deaLineItemAssociations = [{
+    "types": [{
+        "associationCategory": "HUBSPOT_DEFINED",
+        "associationTypeId": 20
+    }],
+    "to": {
+        "id": "21569957652"
+    }
+  }];
+
   lineItems.forEach(lineItem => {
-    console.log("lineItems", lineItems);
-    console.log("lineItem", lineItem);
-    //let productId = lineItem.productId || null;
+
+    if(lineItem.id) {
+      /**
+       * Add here, if line item in cleared list, then:
+       * batchInputObjectForDeleteInputs.push({ id: lineItem.id, ... });
+       */
+      batchInputObjectForUpdateInputs.push({
+        id: lineItem.id,
+        associations: deaLineItemAssociations,
+        properties: {
+          hs_product_id: lineItem.productId,
+          price: lineItem.price
+        }
+      });
+
+    } else {
+
+      batchInputObjectForInsertInputs.push({
+        associations: deaLineItemAssociations,
+        properties: {
+          hs_product_id: lineItem.productId,
+          price: lineItem.price,
+          quantity: 1
+        }
+      });
+
+    }
   });
-    //await hubspot.crm.lineItems.basicApi.update(lineItemId, lineItemProperties);
+
+  const batchInputObjectForUpdate = {
+    inputs: batchInputObjectForUpdateInputs
+  }
+
+  const batchInputObjectForInsert = {
+    inputs: batchInputObjectForInsertInputs
+  }
+
+  try {
+    
+    const responseUpdate = await hubspotClient.crm.lineItems.batchApi.update(batchInputObjectForUpdate);
+    const responseInsert = await hubspotClient.apiRequest({
+      method: 'POST',
+      path: '/crm/v3/objects/line_items/batch/create',
+      body: batchInputObjectForInsert
+    });
+
+    console.info("Line items upserted successfully.");
+
+  } catch (error) {
+
+    console.error(error);
+    throw new Error("An error occurred while upserting line items. Please try again later.");
+    
+  }
+
 };
 
+const upsertHubSpotProperties = async (hubspotClient, formData, dealProperties, clientContext) => {
+  
+  let properties = {
+    "dealstage": "closedwon",
+    "folder_name": formData.foldername?.value || null,
+    "sales_representative": formData.salesRepresentative?.value?.properties?.id || null,
+    "hubspot_owner_id": formData.salesRepresentative?.value?.properties?.id || null,
+  };
+  const simplePublicObjectInput = {
+    properties: properties
+  };
+  try {
+    let response = await hubspotClient.crm.deals.basicApi.update(clientContext.crm.objectId, simplePublicObjectInput);
+    console.info("HubSpot properties upserted successfully.");
+  } catch(error) {
+    console.error(`${error.body.message} Code: ${error.code} Type ${error.body.category}`);
+    throw new Error(error.body.message);
+  }
+ 
+}; 
+
 const createErsFolder = async (formData) => {
+
   const foldername = formData.foldername?.value || null;
   const companyName = formData.billingCompany?.value?.properties?.name || null;
   /**
@@ -60,16 +153,17 @@ const createErsFolder = async (formData) => {
     throw new Error("One or more required fields are missing. Please check your input and try again. If the problem persists, contact an administrator.", postData);
   }
   const response = await axios.post(`https://manage.ourers.com/api/create_folder/`, 
-    qs.stringify(postData), 
-    {
+      qs.stringify(postData), {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'X-API-Key': process.env['ERS_API_KEY']
       }
-    });
+  });
+
   let data = response.data;
   if(!data.success) {
     throw new Error(data.message);
   }
   return data;
+
 };

@@ -2,7 +2,20 @@
   "name": "Deal Close Sale",
   "description": "Guided Closing Process for ERS Sales Representatives",
   "uid": "deal_close_sale",
-  "scopes": ["crm.objects.contacts.read", "crm.objects.contacts.write", "crm.objects.owners.read"],
+  "scopes": [
+    "crm.objects.contacts.read", 
+    "crm.objects.contacts.write", 
+    "crm.objects.owners.read",
+    "crm.objects.deals.read",
+    "crm.objects.deals.write",
+    "crm.objects.companies.read",
+    "crm.objects.companies.write",
+    "collector.graphql_schema.read",
+    "collector.graphql_query.execute",
+    "crm.objects.line_items.read",
+    "crm.objects.line_items.write",
+    "e-commerce"
+  ],
   "public": false,
   "extensions": {
     "crm": {

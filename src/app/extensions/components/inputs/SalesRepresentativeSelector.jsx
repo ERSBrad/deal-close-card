@@ -20,9 +20,9 @@ export const SalesRepresentativeSelector = ({ context, fieldName, runServerless,
     
     useEffect(() => {
         async function determineSalesRepresentative() {
-            let teams = context.settings.teams.sales;
+            let teams = context.settings.sales;
             let teamIds = [];
-            Object.keys(teams).forEach((team) => teamIds.push(teams[team].id));
+            Object.keys(teams).forEach((team) => teamIds.push(teams[team].teamId));
             const serverlessFunction = await runServerless({
                 name: "fetchOwnersByTeam", parameters: { teamIds: teamIds }
             });

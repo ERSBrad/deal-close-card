@@ -41,11 +41,17 @@ const Extension = ({
   /**
    * Convert this to an API call that pulls the sales teams IDs from the CRM via the portalId.
    */
-  context.settings  = {
-    teams: {
-      sales: {
-        ers: { id: "49960194" },
-        drs: { id: "49960165" }
+  context.settings = {
+    sales: {
+      ers: { 
+        teamId: "49960194",
+        closingPipeline: 'default',
+        closingDealStage: 'closedwon'
+      },
+      drs: { 
+        teamId: "49960165",
+        closingPipeline: 'default',
+        closingDealStage: 'closedwon'
       }
     }
   };
@@ -120,17 +126,17 @@ const Extension = ({
   const handleSubmit = async (e) => {
     const dealProperties = await actions.fetchCrmObjectProperties('*');
     setSubmitting(true);
-    let serverlessFunction = await runServerless({ name: "ersCreateFolder", parameters: { formState, dealProperties } });
+    let serverlessFunction = await runServerless({ name: "ersCreateFolder", parameters: { formState, dealProperties, clientContext: context } });
     if(serverlessFunction.status === "ERROR") {
       console.log(serverlessFunction.message);
       setValidationMessage("An error occurred while processing your request. Try again or contact an administrator.");
       setSubmissionError(true);
     } else {
-      console.log(serverlessFunction);
       setSubmitted(true);
       setSubmissionError(false);
       setSubmitting(false);
     }
+    console.log("serverlessFunction", serverlessFunction);
   };
 
   return (
