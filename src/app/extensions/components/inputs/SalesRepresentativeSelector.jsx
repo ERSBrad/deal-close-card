@@ -3,7 +3,7 @@ import {
   Select,
   Tile
 } from "@hubspot/ui-extensions";
-import { updateFormField, formReducer, formInitialState } from "../../utils/reducers";
+import { updateFormField } from "../../utils/reducers";
 
 export const SalesRepresentativeSelector = ({ context, fieldName, runServerless, fetchProperties, currentStep, state, dispatch}) => {
 
@@ -20,7 +20,7 @@ export const SalesRepresentativeSelector = ({ context, fieldName, runServerless,
     
     useEffect(() => {
         async function determineSalesRepresentative() {
-            let teams = context.settings.sales;
+            let teams = context.extension.sales;
             let teamIds = [];
             Object.keys(teams).forEach((team) => teamIds.push(teams[team].teamId));
             const serverlessFunction = await runServerless({
@@ -28,7 +28,6 @@ export const SalesRepresentativeSelector = ({ context, fieldName, runServerless,
             });
             if(serverlessFunction.status === "ERROR") {
                 setShowError(true);
-                console.log("serverlessFunction.message", serverlessFunction.message);
                 setValidationMessage("Please reload the page and see if this error resolves. If not, contact internal HS support.");
                 throw new Error(serverlessFunction.message);
             }

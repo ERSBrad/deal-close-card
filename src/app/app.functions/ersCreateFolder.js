@@ -5,7 +5,7 @@ const path = require('path');
 
 exports.main = async (context = {}) => {
   
-  let { formState: formData, dealProperties, clientContext } = context.parameters;
+  let { formState: formData, clientContext } = context.parameters;
 
   Object.keys(formData).forEach(key => {
     if (typeof formData[key] === 'object' && !Array.isArray(formData[key]) && formData[key] !== null) {
@@ -13,13 +13,13 @@ exports.main = async (context = {}) => {
       delete formData[key];
     }
   });
-
+  console.log(JSON.stringify(formData, null, 2));
   hubspotClient = new hubspot.Client({ accessToken: process.env['PRIVATE_APP_ACCESS_TOKEN'] });
 
   try {
-    const upsertLineItemsResponseData = await upsertHubSpotLineItems(hubspotClient, formData, dealProperties);
-    const upsertHubSpotPropertiesResponse = await upsertHubSpotProperties(hubspotClient, formData, dealProperties, clientContext);
-    const createErsFolderResponseData = await createErsFolder(formData);
+    const upsertLineItemsResponseData = await upsertHubSpotLineItems(hubspotClient, formData, clientContext);
+    const upsertHubSpotPropertiesResponse = await upsertHubSpotProperties(hubspotClient, formData, clientContext);
+    const createErsFolderResponseData = await createErsFolder(formData, clientContext);
   } catch(error) {
     console.error(error);
     throw new Error(error.message);
@@ -28,7 +28,7 @@ exports.main = async (context = {}) => {
   
 };
 
-const upsertHubSpotLineItems = async (hubspotClient, formData, dealProperties) => {
+const upsertHubSpotLineItems = async (hubspotClient, formData, clientContext) => {
 
   let lineItems = formData.lineItems?.value;
   if(!lineItems || lineItems.length === 0) throw new Error("No line items found.");
@@ -41,7 +41,7 @@ const upsertHubSpotLineItems = async (hubspotClient, formData, dealProperties) =
         "associationTypeId": 20
     }],
     "to": {
-        "id": "21569957652"
+        "id": clientContext.crm.objectId
     }
   }];
 
@@ -75,13 +75,9 @@ const upsertHubSpotLineItems = async (hubspotClient, formData, dealProperties) =
     }
   });
 
-  const batchInputObjectForUpdate = {
-    inputs: batchInputObjectForUpdateInputs
-  }
+  const batchInputObjectForUpdate = { inputs: batchInputObjectForUpdateInputs }
 
-  const batchInputObjectForInsert = {
-    inputs: batchInputObjectForInsertInputs
-  }
+  const batchInputObjectForInsert = { inputs: batchInputObjectForInsertInputs }
 
   try {
     
@@ -103,22 +99,25 @@ const upsertHubSpotLineItems = async (hubspotClient, formData, dealProperties) =
 
 };
 
-const upsertHubSpotProperties = async (hubspotClient, formData, dealProperties, clientContext) => {
+const upsertHubSpotProperties = async (hubspotClient, formData, clientContext) => {
   
+  console.log(clientContext.extension.sales);
+  let salesSettings = Object.values(clientContext.extension.sales).find((salesTeamBrandSegment) => salesTeamBrandSegment.closingPipelineId === clientContext.crm.objectProperties.pipeline);
+  if(!salesSettings || typeof salesSettings !== 'object') throw new Error("The current deals pipeline does not match any existing settings. Please contact an administrator to update the UI Extensions settings with the correct Pipeline ID.");
   let properties = {
-    "dealstage": "closedwon",
+    "dealstage": salesSettings.closingDealStageId || null,
     "folder_name": formData.foldername?.value || null,
     "sales_representative": formData.salesRepresentative?.value?.properties?.id || null,
     "hubspot_owner_id": formData.salesRepresentative?.value?.properties?.id || null,
   };
-  const simplePublicObjectInput = {
-    properties: properties
-  };
+
+  const simplePublicObjectInput = { properties };
+
   try {
     let response = await hubspotClient.crm.deals.basicApi.update(clientContext.crm.objectId, simplePublicObjectInput);
     console.info("HubSpot properties upserted successfully.");
   } catch(error) {
-    console.error(`${error.body.message} Code: ${error.code} Type ${error.body.category}`);
+    console.error(`${error.body.message} Code: ${error.code} Type: ${error.body.category}`);
     throw new Error(error.body.message);
   }
  

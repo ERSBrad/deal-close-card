@@ -77,7 +77,6 @@ exports.main = async (context = {}) => {
           lineItemsPlanType = lineItemsProduct && lineItemsProduct.isPlanType;
         }
         return {
-
           id: item.hs_object_id,
           label: item.name,
           value: item.hs_sku,

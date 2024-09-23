@@ -25,10 +25,6 @@ export const Step2 = ({
   handlePreviousStep
 }) => {
 
-    const createErsFolder = async (formState) => {
-
-    }
-
     return (
         <Flex direction={'column'} gap={'medium'}>
             <Box>

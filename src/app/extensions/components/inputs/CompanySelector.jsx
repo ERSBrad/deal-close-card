@@ -102,7 +102,7 @@ export const CompanySelector = ({  fieldName, context, runServerless, sendAlert,
                             }
                         }}
                     >
-                        { (!loading && !isValid) && "Add a Company Now" || "Add New Company" }
+                        { (!loading && !isValid) && "Attach Company Now" || "Update Company" }
                     </CrmActionButton>
                 </Box>
             </Flex>

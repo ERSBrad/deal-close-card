@@ -10,6 +10,7 @@ import {
     FoldernameValidator,
     ContactSelector,
     CompanySelector,
+    OnboardingScheduler
 } from "../inputs";
 
 // Define the Extension component, taking in runServerless, context, & sendAlert as props

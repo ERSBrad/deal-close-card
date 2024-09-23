@@ -3,11 +3,12 @@ import {
   Select,
   Tile,
   Flex,
-  Box
+  Box,
 } from "@hubspot/ui-extensions";
 
 import {
     CrmActionButton,
+    CrmActionLink,
 } from "@hubspot/ui-extensions/crm";
 
 import { updateFormField } from "../../utils/reducers";
@@ -102,7 +103,7 @@ export const ContactSelector = ({ id, setValidity, fieldName, context, runServer
                         size="small"
                         onError={(errors) => handleCrmActionButtonError(errors)}
                     >
-                        { (!loading && !isValid) && "Add a Contact Now" || "Add New Contact" }
+                        { (!loading && !isValid) && "Attach Contact Now" || "Update Contact" }
                     </CrmActionButton>
                 </Box>
             </Flex>

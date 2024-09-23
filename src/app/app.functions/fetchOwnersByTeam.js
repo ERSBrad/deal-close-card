@@ -17,9 +17,8 @@ async function fetchOwnersByTeam(teamIds) {
         let owners = response.results;
         for(const owner of owners) {
             if("teams" in owner) {
-                // Fix includes, doesn't think it's an array or some shi
-                const teamId = owner.teams.forEach((team) => {
-                    let teamIdExists = teamIds.includes(team.id)
+                owner.teams.forEach((team) => {
+                    let teamIdExists = teamIds.includes(team.id);
                     if(teamIdExists) {
                         usersByTeam[team.id] = usersByTeam[team.id] || [];
                         let ownerJson = ownerToJson(owner);
