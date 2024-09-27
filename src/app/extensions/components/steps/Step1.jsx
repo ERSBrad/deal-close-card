@@ -9,8 +9,7 @@ import {
     SalesRepresentativeSelector,
     FoldernameValidator,
     ContactSelector,
-    CompanySelector,
-    OnboardingScheduler
+    CompanySelector
 } from "../inputs";
 
 // Define the Extension component, taking in runServerless, context, & sendAlert as props

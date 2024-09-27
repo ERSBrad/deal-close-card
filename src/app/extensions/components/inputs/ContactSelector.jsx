@@ -7,11 +7,11 @@ import {
 } from "@hubspot/ui-extensions";
 
 import {
-    CrmActionButton,
-    CrmActionLink,
+    CrmActionButton
 } from "@hubspot/ui-extensions/crm";
 
 import { updateFormField } from "../../utils/reducers";
+import { handleErrors } from "../../utils";
 
 export const ContactSelector = ({ id, setValidity, fieldName, context, runServerless, currentStep, state, dispatch }) => {
 
@@ -22,10 +22,10 @@ export const ContactSelector = ({ id, setValidity, fieldName, context, runServer
         label: "",
         properties: {}
     });
-    const [showError, setShowError] = useState(false);
+    const [error, setError] = useState(false);
     const [validationMessage, setValidationMessage] = useState("");
-    const [isValid, setIsValid] = useState(false);
-    updateFormField(dispatch, currentStep, fieldName, isValid, selectedContact);
+    const [valid, setValid] = useState(false);
+    updateFormField(dispatch, currentStep, fieldName, valid, selectedContact);
 
     let placeholderText = loading ? "Loading..." : "Select a contact";
 
@@ -34,11 +34,11 @@ export const ContactSelector = ({ id, setValidity, fieldName, context, runServer
             let serverlessFunction = await runServerless({
                 name: "fetchAssociatedContacts", parameters: { currentObjectId: context.crm.objectId }
             });
-            if(serverlessFunction.status === "ERROR") throw new Error(serverlessFunction.message);
+            handleErrors(serverlessFunction, context, setError, setValidationMessage);
             let associatedContacts = serverlessFunction.response;
             switch(associatedContacts.length) {
                 case 0:
-                    setShowError(true);
+                    setError(true);
                     setValidationMessage("No contacts found for this deal, please create a contact first.");
                     break;
                 case 1:
@@ -46,11 +46,11 @@ export const ContactSelector = ({ id, setValidity, fieldName, context, runServer
                     if(selectedContact.value === "") {
                         setSelectedContact(associatedContacts[0]);
                     }
-                    setIsValid(true);
+                    setValid(true);
                     break;
                 default:
                     setContacts(associatedContacts);
-                    setIsValid(true);
+                    setValid(true);
                     break;
             }
             setLoading(false);
@@ -85,7 +85,7 @@ export const ContactSelector = ({ id, setValidity, fieldName, context, runServer
                         onChange={(value) => handleSelectChange(value)}
                         placeholder={placeholderText}
                         readOnly={loading}
-                        error={showError}
+                        error={error}
                         validationMessage={validationMessage}
                     />
                 </Box>
@@ -103,7 +103,7 @@ export const ContactSelector = ({ id, setValidity, fieldName, context, runServer
                         size="small"
                         onError={(errors) => handleCrmActionButtonError(errors)}
                     >
-                        { (!loading && !isValid) && "Attach Contact Now" || "Update Contact" }
+                        { (!loading && !valid) && "Attach Contact Now" || "Update Contact" }
                     </CrmActionButton>
                 </Box>
             </Flex>

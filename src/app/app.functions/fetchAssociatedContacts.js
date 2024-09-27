@@ -4,17 +4,10 @@ const { default: axios } = require('axios');
 exports.main = async (context = {}) => {
     let id = context.parameters.currentObjectId;
     let contacts = await fetchAssociations(id);
-    return contacts.map(contact => ({
-        label: `${contact.firstname} ${contact.lastname}`,
-        value: contact.hs_object_id,
-        properties: {
-            firstname: contact.firstname,
-            lastname: contact.lastname,
-            email: contact.email,
-            phone: contact.phone,
-            contact: contact.contact,
-            id: contact.hs_object_id,
-        }
+    return contacts.map(contactProperties => ({
+        label: `${contactProperties.firstname} ${contactProperties.lastname}`,
+        value: contactProperties.hs_object_id,
+        properties: contactProperties
       }));
 }
 
@@ -60,6 +53,11 @@ const gql = {
                                 email
                                 phone
                                 company
+                                address
+                                city
+                                state
+                                zip
+                                country
                             }
                         }
                     }

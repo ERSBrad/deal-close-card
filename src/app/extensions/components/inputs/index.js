@@ -4,4 +4,5 @@ export { FoldernameValidator } from "./FoldernameValidator";
 export { SalesRepresentativeSelector } from "./SalesRepresentativeSelector";
 export { LineItems } from "./LineItems";
 export { WebsiteTemplateSelector } from "./WebsiteTemplateSelector";
-export { OnboardingScheduler } from "./OnboardingScheduler";
+export { ContactAddressValidator } from "./ContactAddressValidator";
+export { CompanyAddressValidator } from "./CompanyAddressValidator";

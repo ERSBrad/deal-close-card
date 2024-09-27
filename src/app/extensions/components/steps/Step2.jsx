@@ -4,7 +4,8 @@ import {
     Box,
     Button,
     Text,
-    Tile
+    Tile,
+    Heading,
 } from "@hubspot/ui-extensions";
 
 import {
@@ -56,7 +57,7 @@ export const Step2 = ({
                 {(currentStep > 0) && (
                     <Button variant="secondary" onClick={handlePreviousStep}>Previous Step</Button>
                 )}
-                <Button variant="primary" type="submit" disabled={!enableSubmit}>Submit & Continue</Button>
+                <Button variant="primary" onClick={handleStepSubmission} disabled={!enableSubmit}>Submit & Continue</Button>
             </Box>
         </Flex>
     );

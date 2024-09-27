@@ -5,14 +5,9 @@ const path = require('path');
 
 exports.main = async (context = {}) => {
   
-  let { formState: formData, clientContext } = context.parameters;
-
-  Object.keys(formData).forEach(key => {
-    if (typeof formData[key] === 'object' && !Array.isArray(formData[key]) && formData[key] !== null) {
-      Object.assign(formData, formData[key]);
-      delete formData[key];
-    }
-  });
+  const { formState, clientContext } = context.parameters;
+  const formData = flattenFormData(formState);
+  
   console.log(JSON.stringify(formData, null, 2));
   hubspotClient = new hubspot.Client({ accessToken: process.env['PRIVATE_APP_ACCESS_TOKEN'] });
 
@@ -126,6 +121,7 @@ const upsertHubSpotProperties = async (hubspotClient, formData, clientContext) =
 const createErsFolder = async (formData) => {
 
   const foldername = formData.foldername?.value || null;
+  if(typeof foldername === 'string') foldername = foldername.trim();
   const companyName = formData.billingCompany?.value?.properties?.name || null;
   /**
    * Per Wesley's request, we are sending foldername 
@@ -151,7 +147,7 @@ const createErsFolder = async (formData) => {
   if(missingPostData) {
     throw new Error("One or more required fields are missing. Please check your input and try again. If the problem persists, contact an administrator.", postData);
   }
-  const response = await axios.post(`https://manage.ourers.com/api/create_folder/`, 
+  const response = await axios.post(`https://manage.ourers.com/api/folders/create/`, 
       qs.stringify(postData), {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -164,5 +160,29 @@ const createErsFolder = async (formData) => {
     throw new Error(data.message);
   }
   return data;
+
+};
+
+const flattenFormData = (formState) => {
+  let formData = { ...formState };
+  Object.keys(formData).forEach(key => {
+    if (typeof formData[key] === 'object' && !Array.isArray(formData[key]) && formData[key] !== null) {
+      Object.assign(formData, formData[key]);
+      delete formData[key];
+    }
+  });
+  return formData;
+}
+
+const triggerWorkatoWebhook = async (context, formData) => {
+  const formattedFormData = {};
+  const response = axios.post(
+    'https://webhooks.workato.com/webhooks/rest/94f41cf1-fbf1-42ef-a524-162f2cf3810d/collect-deal-close-card-submission', 
+    formattedFormData, 
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
 
 };

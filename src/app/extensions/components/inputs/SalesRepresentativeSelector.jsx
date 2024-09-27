@@ -4,6 +4,7 @@ import {
   Tile
 } from "@hubspot/ui-extensions";
 import { updateFormField } from "../../utils/reducers";
+import { handleErrors } from "../../utils";
 
 export const SalesRepresentativeSelector = ({ context, fieldName, runServerless, fetchProperties, currentStep, state, dispatch}) => {
 
@@ -13,10 +14,11 @@ export const SalesRepresentativeSelector = ({ context, fieldName, runServerless,
         label: "",
         properties: {}
     });
-    const [showError, setShowError] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
     const [validationMessage, setValidationMessage] = useState("");
-    const [isValid, setIsValid] = useState(false);
-    updateFormField(dispatch, currentStep, fieldName, isValid, currentSalesRepresentative);
+    const [valid, setValid] = useState(false);
+    updateFormField(dispatch, currentStep, fieldName, valid, currentSalesRepresentative);
     
     useEffect(() => {
         async function determineSalesRepresentative() {
@@ -26,11 +28,7 @@ export const SalesRepresentativeSelector = ({ context, fieldName, runServerless,
             const serverlessFunction = await runServerless({
                 name: "fetchOwnersByTeam", parameters: { teamIds: teamIds }
             });
-            if(serverlessFunction.status === "ERROR") {
-                setShowError(true);
-                setValidationMessage("Please reload the page and see if this error resolves. If not, contact internal HS support.");
-                throw new Error(serverlessFunction.message);
-            }
+            handleErrors(serverlessFunction, context, setError, setValidationMessage);
             //Grouped it by TeamID in case we want to split it by brand segment at some point
             let salesRepresentativesByTeamIds = serverlessFunction.response;
             if(salesRepresentativesByTeamIds.length == 0) return;
@@ -60,7 +58,8 @@ export const SalesRepresentativeSelector = ({ context, fieldName, runServerless,
             if(currentSalesRepresentative.value === "") {
                 setCurrentSalesRepresentative(suggestedSalesRepresentative);
             }
-            setIsValid(true);
+            setValid(true);
+            setLoading(false);
         }
         determineSalesRepresentative();
 
@@ -71,6 +70,8 @@ export const SalesRepresentativeSelector = ({ context, fieldName, runServerless,
         setCurrentSalesRepresentative(selectedSalesRepresentative);
     }
 
+    let placeholderText = loading ? "Loading..." : "Select a Sales Representative";
+
     return (
         <Tile compact>
             <Select
@@ -79,9 +80,11 @@ export const SalesRepresentativeSelector = ({ context, fieldName, runServerless,
                 tooltip="The sales representative that will get credit for this deal."
                 value={currentSalesRepresentative.value}
                 options={salesRepresentatives}
+                placeholder={placeholderText}
                 onChange={handleSalesRepresentativeChange}
                 required={true}
-                error={showError}
+                readOnly={loading || error}
+                error={error}
                 validationMessage={validationMessage}
                 //Doesn't necessarilly need an error because this should always have a value, contact and company don't
             />

@@ -1,66 +1,31 @@
-import { useEffect } from 'react';
-
-
-export const loadExtensionSettings = (context, setLoadingSettings) => {
-    context.extension = { ...context.extension, ...attachExtensionContext(context) };
-    useEffect(() => {
-        async function attachDealProperties() {
-            context.crm.objectProperties = await context.actions.fetchCrmObjectProperties('*');
-            context.crm.objectPipelineSettings = getObjectPipelineSettings(context);
-            setLoadingSettings(false);
-        };
-        attachDealProperties();
-    }, []);
+export const flattenFormState = (formState) => {
+    let formData = { ...formState };
+    Object.keys(formData).forEach(key => {
+        if (typeof formData[key] === 'object' && !Array.isArray(formData[key]) && formData[key] !== null) {
+        Object.assign(formData, formData[key]);
+        delete formData[key];
+        }
+    });
+    return formData;
 }
 
-const getObjectPipelineSettings = (context) => {
-    let pipelineId = context.crm.objectProperties.pipeline;
-    let salesSettings = Object.values(context.extension.sales).find((salesTeamBrandSegment) => salesTeamBrandSegment.closingPipelineId === pipelineId);
-    return salesSettings;
-}
-
-export const attachExtensionContext = (context) => {
-    let portalId = context.portal.id;
-    switch(portalId) {
-        case 9145732:
-            return {
-                sales: {
-                    ers: { 
-                        label: "ERS",
-                        teamId: "47385455",
-                        closingPipelineId: '2775952',
-                        closingDealStageId: '151949679',
-                        onboardingLink: "https://www.eventrentalsystems.com/onboarding"
-                    },
-                    drs: { 
-                        label: "DRS",
-                        teamId: "47385466",
-                        closingPipelineId: 'default',
-                        closingDealStageId: '151941676',
-                        onboardingLink: "https://www.dumpsterrentalsystems.com/onboarding"
-                    }
-                }
-            };
-        case 47116658:
-            return {
-                sales: {
-                    ers: { 
-                        label: "ERS",
-                        teamId: "49960194",
-                        closingPipelineId: 'default',
-                        closingDealStageId: 'closedwon',
-                        onboardingLink: "https://www.eventrentalsystems.com/onboarding"
-                    },
-                    drs: { 
-                        label: "DRS",
-                        teamId: "49960165",
-                        closingPipelineId: 'default',
-                        closingDealStageId: 'closedwon',
-                        onboardingLink: "https://www.dumpsterrentalsystems.com/onboarding"
-                    }
-                }
-            };
-        default:
-            return {}
+export const handleErrors = (serverlessFunction, context, setError, setValidationMessage, reloadDelay=1000) => {
+    if(serverlessFunction.status === "ERROR") {
+        const timeoutRegex = /Task timed out after (.*) seconds/i;
+        if(serverlessFunction.message.match(timeoutRegex)) {
+            console.log(context);
+            if(!context.extension.reloadInitiated) {
+                context.extension.reloadInitiated = true;
+                context.actions.addAlert({ type: "danger", message: "The HubSpot API timed out, reloading the page automatically. Close this tab to stop automatic reloads." });
+                setTimeout(() => {
+                    context.actions.reloadPage();
+                }, reloadDelay);
+                throw new Error(serverlessFunction.message);
+            }
+        } else {
+            setError(true);
+            setValidationMessage("Please reload the page and see if this error resolves. If not, contact internal HS support.");
+            console.log(serverlessFunction.message);
+        }
     }
 }

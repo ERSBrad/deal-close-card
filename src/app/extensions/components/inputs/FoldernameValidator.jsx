@@ -11,29 +11,35 @@ import { updateFormField } from "../../utils/reducers";
 export const FoldernameValidator = ({  id, setValidity, fieldName, context, runServerless, sendAlert, validInput, currentStep, state, dispatch }) => {
 
     const [foldername, setFoldername] = useState(state[currentStep]?.[fieldName]?.value || "");
-    const [showError, setShowError] = useState(false);
+    const [error, setError] = useState(false);
     const [validationMessage, setValidationMessage] = useState("");
-    const [isValid, setIsValid] = useState(false);
-    updateFormField(dispatch, currentStep, fieldName, isValid, foldername);
+    const [valid, setValid] = useState(false);
+    updateFormField(dispatch, currentStep, fieldName, valid, foldername);
 
 
     const checkFoldername = async () => {
-        if(foldername && foldername.length > 0) {
-            const serverlessResponse = await runServerless({ name: "ersCheckFoldername", parameters: { foldername } });
-            if(!serverlessResponse.status == "SUCCESS") {
-                setShowError(true);
+        if(foldername && foldername.length > 0 && typeof foldername === "string") {
+            const validFoldername = /^[a-z0-9-_]+$/.test(foldername);
+            if(!validFoldername) {
+                setValidationMessage("Foldername can only contain lowercase letters, numbers, hyphens, and underscores.");
+                setError(true);
+                return;
+            }
+            const serverlessFunction = await runServerless({ name: "ersCheckFoldername", parameters: { foldername } });
+            if(!serverlessFunction.status == "SUCCESS") {
+                setError(true);
                 setValidationMessage("An unknown error occurred checking foldername, please try again.");
                 return;
             }
-            let ersResponse = serverlessResponse.response;
+            let ersResponse = serverlessFunction.response;
             const { success, message } = ersResponse;
             if(!success) {
-                setShowError(true);
+                setError(true);
                 setValidationMessage(message);
                 return;
             }
-            setShowError(false);
-            setIsValid(true);
+            setError(false);
+            setValid(true);
             setValidationMessage(message);
         }
     }
@@ -55,7 +61,7 @@ export const FoldernameValidator = ({  id, setValidity, fieldName, context, runS
                         placeholder={"Enter a folder name"}
                         onChange={(value) => setFoldername(value)}
                         onBlur={() => checkFoldername()}
-                        error={showError}
+                        error={error}
                         validationMessage={validationMessage}
                         required={true}
                     />

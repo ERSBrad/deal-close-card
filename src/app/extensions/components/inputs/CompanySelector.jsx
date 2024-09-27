@@ -10,6 +10,7 @@ import {
     CrmActionButton,
 } from "@hubspot/ui-extensions/crm";
 import { updateFormField } from "../../utils/reducers";
+import { handleErrors } from "../../utils";
 
 export const CompanySelector = ({  fieldName, context, runServerless, sendAlert, currentStep, state, dispatch }) => {
 
@@ -20,22 +21,22 @@ export const CompanySelector = ({  fieldName, context, runServerless, sendAlert,
         label: "",
         properties: {}
     });
-    const [showError, setShowError] = useState(false);
+    const [error, setError] = useState(false);
     //Maybe change below to useState({type: "valid", message: ""}); to eliminate showError? type:"error" for showing error
     const [validationMessage, setValidationMessage] = useState("");
-    const [isValid, setIsValid] = useState(false);
-    updateFormField(dispatch, currentStep, fieldName, isValid, selectedCompany);
+    const [valid, setValid] = useState(false);
+    updateFormField(dispatch, currentStep, fieldName, valid, selectedCompany);
 
     useEffect(() => {
         async function fetchCompanies() {
             let serverlessFunction = await runServerless({
                 name: "fetchAssociatedCompanies", parameters: { currentObjectId: context.crm.objectId }
             });
-            if(serverlessFunction.status === "ERROR") throw new Error(serverlessFunction.message);
+            handleErrors(serverlessFunction, context, setError, setValidationMessage);
             let associatedCompanies = serverlessFunction.response;
             switch(associatedCompanies.length) {
                 case 0:
-                    setShowError(true);
+                    setError(true);
                     setValidationMessage("No companies associated with this deal, create a company to continue.");
                     break;
                 case 1:
@@ -43,7 +44,7 @@ export const CompanySelector = ({  fieldName, context, runServerless, sendAlert,
                     if(selectedCompany.value === "") {
                         setSelectedCompany(associatedCompanies[0]);
                     }
-                    setIsValid(true);
+                    setValid(true);
                     break;
                 default:
                     setCompanies(associatedCompanies);
@@ -56,7 +57,7 @@ export const CompanySelector = ({  fieldName, context, runServerless, sendAlert,
     const handleSelectChange = (value) => {
         let selectedCompany = companies.find(company => company.value === value);
         setSelectedCompany(selectedCompany);
-        setIsValid(true);
+        setValid(true);
     }
 
     const handleCrmActionButtonError = async (errors) => {
@@ -83,8 +84,8 @@ export const CompanySelector = ({  fieldName, context, runServerless, sendAlert,
                         value={selectedCompany.value}
                         onChange={(value) => handleSelectChange(value)}
                         placeholder={placeholderText}
-                        readOnly={loading || showError}
-                        error={showError}
+                        readOnly={loading || error}
+                        error={error}
                         validationMessage={validationMessage}
                     />
                 </Box>
@@ -102,7 +103,7 @@ export const CompanySelector = ({  fieldName, context, runServerless, sendAlert,
                             }
                         }}
                     >
-                        { (!loading && !isValid) && "Attach Company Now" || "Update Company" }
+                        { (!loading && !valid) && "Attach Company Now" || "Update Company" }
                     </CrmActionButton>
                 </Box>
             </Flex>

@@ -4,15 +4,10 @@ const { default: axios } = require('axios');
 exports.main = async (context = {}) => {
     let id = context.parameters.currentObjectId;
     let companies = await fetchAssociations(id);
-    return companies.map(company => ({
-        label: company.name,
-        value: company.hs_object_id,
-        properties: {
-            name: company.name,
-            domain: company.domain,
-            id: company.hs_object_id,
-            folder_name: company.folder_name
-        }
+    return companies.map(companyProperties => ({
+        label: companyProperties.name,
+        value: companyProperties.hs_object_id,
+        properties: companyProperties
     }));
 }
 
@@ -55,6 +50,11 @@ const gql = {
                                 hs_object_id
                                 domain
                                 folder_name
+                                address
+                                city
+                                state
+                                zip
+                                country
                             }
                         }
                     }

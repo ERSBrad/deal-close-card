@@ -10,7 +10,7 @@ async function fetchOwnersByTeam(teamIds) {
     let usersByTeam = {};
     let hubspotClient = new hubspot.Client({ 
         accessToken: process.env.PRIVATE_APP_ACCESS_TOKEN,
-        numbetOfApiCallRetries: 3
+        numberOfApiCallRetries: 3
     });
     try {
         let response = await hubspotClient.crm.owners.ownersApi.getPage();

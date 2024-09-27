@@ -10,16 +10,17 @@ import {
   Image,
   LoadingSpinner,
   StepIndicator,
-  Text,
+  Text
 } from "@hubspot/ui-extensions";
 
 import {
   Step1,
-  Step2
+  Step2,
+  Step3
 } from "./components/steps";
 
 import { stepReducer, formReducer, formInitialState } from "./utils/reducers";
-import { loadExtensionSettings } from "./utils";
+import { loadExtensionSettings } from "./utils/settings";
 
 // Define the extension to be run within the Hubspot CRM
 hubspot.extend(({ context, runServerlessFunction, actions }) => (
@@ -51,14 +52,15 @@ const Extension = ({
   const [stepState, stepDispatch] = useReducer(stepReducer, stepInitialState);
   const [formState, formDispatch] = useReducer(formReducer, formInitialState);
   const [currentStep, setCurrentStep] = useState(0);
-  const stepNames = ["Add Deal Information", "Add Services Sold"];
+  const stepNames = ["Add Deal Information", "Add Line Items", "Contact & Company Address"];
   const [unlockedSteps, setUnlockedSteps] = useState([]);
 
   context.actions = actions;
   loadExtensionSettings(context, setLoadingSettings);
   
   useEffect(() => {
-    console.log(context);
+    console.log("context", context);
+    console.log("formState", formState);
     if(!formState.hasOwnProperty(currentStep)) return;
     let currentStepsFormFields = formState[currentStep];
     let shouldEnableSubmit = Object.values(currentStepsFormFields).every(field => field.valid);
@@ -101,10 +103,8 @@ const Extension = ({
       return;
     }
     if (requestedStep > currentStep) {
-      console.log("INCREMENT_STEP");
       stepDispatch({ type: "INCREMENT_STEP", currentStep: currentStep, requestedStep: requestedStep });
     } else if (requestedStep < currentStep) {
-      console.log("DECREMENT_STEP");
       stepDispatch({ type: "DECREMENT_STEP", currentStep: currentStep, requestedStep: requestedStep });
     }
   };
@@ -124,7 +124,7 @@ const Extension = ({
     setSubmitting(true);
     let serverlessFunction = await runServerless({ name: "ersCreateFolder", parameters: { formState, clientContext: context } });
     if(serverlessFunction.status === "ERROR") {
-      console.log(serverlessFunction.message);
+      console.error(serverlessFunction.message);
       setValidationMessage("An error occurred while processing your request. Try again or contact an administrator.");
       setSubmissionError(true);
     } else {
@@ -132,14 +132,17 @@ const Extension = ({
       setSubmissionError(false);
       setSubmitting(false);
     }
-    console.log("serverlessFunction", serverlessFunction);
   };
 
   return (
     <Flex direction="column" gap="large" align="stretch">
       <Divider distance="xl" />
         {loadingSettings ? (
-          <LoadingSpinner />
+          <LoadingSpinner 
+            size="medium"
+            label="Loading Extension..."
+            layout="centered"
+          />
         ) : (
           <>
             {(!submitting && !submitted) && (
@@ -169,6 +172,19 @@ const Extension = ({
                   )}
                   {currentStep === 1 && (
                     <Step2
+                      context={context}
+                      runServerless={runServerless}
+                      actions={actions}
+                      handleStepSubmission={handleStepSubmission}
+                      formState={formState}
+                      formDispatch={formDispatch}
+                      enableSubmit={enableSubmit}
+                      currentStep={currentStep}
+                      handlePreviousStep={handlePreviousStep}
+                    />
+                  )}
+                  {currentStep === 2 && (
+                    <Step3
                       context={context}
                       runServerless={runServerless}
                       actions={actions}

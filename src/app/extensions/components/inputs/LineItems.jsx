@@ -3,7 +3,6 @@ import {
     Box,
     Button,
     Alert,
-    ButtonRow,
     Flex,
     Table,
     TableHead,
@@ -17,9 +16,11 @@ import {
     Text,
     Modal,
     ModalBody,
-    ModalFooter
+    ModalFooter,
+    LoadingSpinner
 } from '@hubspot/ui-extensions';
 import { updateFormField } from '../../utils/reducers';
+import { handleErrors } from '../../utils';
 
 export const LineItems = ({ context, state, fieldName, dispatch, runServerless, currentStep, actions }) => {
 
@@ -36,21 +37,17 @@ export const LineItems = ({ context, state, fieldName, dispatch, runServerless, 
     useEffect(() => {
         const loadLineItemList = async () => {
             let serverlessFunction = await runServerless({ name: "fetchLineItems", parameters: { currentObjectId: context.crm.objectId } });
-            if(serverlessFunction.status === "ERROR") {
-                setError(true);
-                setValidationMessage("An error occurred while fetching line items, contact an administrator or check the console for more information.");
-                throw new Error(serverlessFunction.message);
-            }
-            setError(false);
-            setProductList(serverlessFunction.response.products);
-
+            handleErrors(serverlessFunction, context, setError, setValidationMessage);
             if(serverlessFunction.response.dealLineItems.numItems > 0 && (!lineItems.length || lineItems[0]?.value === '')) {
                 setLineItems(serverlessFunction.response.dealLineItems.items);
                 setValid(true);
             }
+            setProductList(serverlessFunction.response.products);
+            setError(false);
+            setLoading(false);
         }
         loadLineItemList();
-    }, [])
+    }, []);
 
     const addLineItemRow = () => {
         const newLineItems = [...lineItems, { value: '', price: 0, frequency: '', label: '', productId: '' }];
@@ -61,7 +58,7 @@ export const LineItems = ({ context, state, fieldName, dispatch, runServerless, 
     const handleSelectChange = (index, value) => {
         const selectedItem = productList.find((item) => item.value === value);
         if(!selectedItem) {
-            console.log("No matching item found in the list of products. A reload will mostly fix this, if not contact an administrator.");
+            console.error("No matching item found in the list of products. A reload will mostly fix this, if not contact an administrator.");
         }
         const updatedItem = {
           ...lineItems[index],
@@ -106,6 +103,15 @@ export const LineItems = ({ context, state, fieldName, dispatch, runServerless, 
 
     return (
         <Flex direction="column" gap="small">
+        {loading ? (
+            <LoadingSpinner
+                size="medium"
+                label="Loading Line Items..."
+                layout="centered"
+                showLabel
+            />
+        ) : (
+            <>
             <Box>
                 <Table>
                     <TableHead>
@@ -159,13 +165,13 @@ export const LineItems = ({ context, state, fieldName, dispatch, runServerless, 
                 }>Clear Line Items</Button>
             </Box>
             {/* If lineItems exist, show Website Template, Website Type, Unit #, etc. */}
+            </>
+        )}
         </Flex>
-    )
-
+    );
 }
 
 const useEffectLineItems = (lineItems, addLineItemRow, setValid, setEnableClear) => {
-    console.log("lineItems", lineItems);
     useEffect(() => {
         const validateLineItems = () => {
             if(lineItems.length < 1) {
