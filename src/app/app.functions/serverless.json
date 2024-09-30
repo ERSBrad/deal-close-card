@@ -20,9 +20,13 @@
       "file": "ersCheckFoldername.js",
       "secrets": ["ERS_API_KEY"]
     },
-    "ersCreateFolder": {
-      "file": "ersCreateFolder.js",
+    "submitDealClose": {
+      "file": "submitDealClose.js",
       "secrets": ["ERS_API_KEY"]
+    },
+    "validateAssociatedObjectProperties": {
+      "file": "validateAssociatedObjectProperties.js",
+      "secrets": []
     }
   }
 }

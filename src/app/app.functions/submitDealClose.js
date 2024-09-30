@@ -96,7 +96,6 @@ const upsertHubSpotLineItems = async (hubspotClient, formData, clientContext) =>
 
 const upsertHubSpotProperties = async (hubspotClient, formData, clientContext) => {
   
-  console.log(clientContext.extension.sales);
   let salesSettings = Object.values(clientContext.extension.sales).find((salesTeamBrandSegment) => salesTeamBrandSegment.closingPipelineId === clientContext.crm.objectProperties.pipeline);
   if(!salesSettings || typeof salesSettings !== 'object') throw new Error("The current deals pipeline does not match any existing settings. Please contact an administrator to update the UI Extensions settings with the correct Pipeline ID.");
   let properties = {
@@ -109,7 +108,7 @@ const upsertHubSpotProperties = async (hubspotClient, formData, clientContext) =
   const simplePublicObjectInput = { properties };
 
   try {
-    let response = await hubspotClient.crm.deals.basicApi.update(clientContext.crm.objectId, simplePublicObjectInput);
+    await hubspotClient.crm.deals.basicApi.update(clientContext.crm.objectId, simplePublicObjectInput);
     console.info("HubSpot properties upserted successfully.");
   } catch(error) {
     console.error(`${error.body.message} Code: ${error.code} Type: ${error.body.category}`);

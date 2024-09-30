@@ -29,3 +29,15 @@ export const handleErrors = (serverlessFunction, context, setError, setValidatio
         }
     }
 }
+
+export const openOnboardingMeetingSchedularModal = (context, callback) => {
+    const scheduleOnboardingLink = context.crm.objectPipelineSettings.onboardingLink;
+    const brandSegmentLabel = context.crm.objectPipelineSettings.label;
+    context.actions.openIframeModal({
+        uri: scheduleOnboardingLink, // this is a relative link. Some links will be blocked since they don't allow iframing
+        height: 1000,
+        width: 1000,
+        title: `Schedule ${brandSegmentLabel} Onboarding`,
+        flush: true
+    }, callback);
+}

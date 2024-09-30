@@ -1,6 +1,4 @@
 let axios = require('axios');
-const hubspot = require('@hubspot/api-client');
-
 
 exports.main = async (context = {}) => {
   let { foldername } = context.parameters;

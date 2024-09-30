@@ -16,7 +16,6 @@ export const CompanyAddressValidator = ({ context, fieldName, currentStep, state
   const propertyNameList = [
     'name',
     'phone',
-    'email',
     'address',
     'city',
     'state',
@@ -39,7 +38,18 @@ export const CompanyAddressValidator = ({ context, fieldName, currentStep, state
        * after starting the form. Might be worth adding a check to ensure it's current.
        */
       const formData = flattenFormState(state);
-      setBillingCompany(formData[companySelectorFieldname]?.value || {});
+      const billingCompanyData = formData[companySelectorFieldname]?.value || {};
+      setBillingCompany(billingCompanyData);
+      /**
+       * This is a temporary solution for validating an associated object's properties.
+       * It stores the list of properties in context so I can access it at a higher level.
+       */
+      context.crm.associatedObjects = context.crm?.associatedObjects || {};
+      context.crm.associatedObjects.company = {
+        objectId: billingCompanyData?.value,
+        propertyNameList
+      };
+
     };
     getCurrentPropertyValues();
   }, []);

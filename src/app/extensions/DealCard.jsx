@@ -21,7 +21,7 @@ import {
 
 import { stepReducer, formReducer, formInitialState } from "./utils/reducers";
 import { loadExtensionSettings } from "./utils/settings";
-
+import { openOnboardingMeetingSchedularModal } from "./utils";
 // Define the extension to be run within the Hubspot CRM
 hubspot.extend(({ context, runServerlessFunction, actions }) => (
   <Extension
@@ -56,11 +56,16 @@ const Extension = ({
   const [unlockedSteps, setUnlockedSteps] = useState([]);
 
   context.actions = actions;
+  context.runServerless = runServerless;
+  /**
+   * Steps are set using arrays, so the first step is 0, second step is 1, etc.
+   */
+  context.scheduleOnboardingMeetingStep = 2;
   loadExtensionSettings(context, setLoadingSettings);
   
   useEffect(() => {
-    console.log("context", context);
-    console.log("formState", formState);
+    console.debug("context", context);
+    console.debug("formState", formState);
     if(!formState.hasOwnProperty(currentStep)) return;
     let currentStepsFormFields = formState[currentStep];
     let shouldEnableSubmit = Object.values(currentStepsFormFields).every(field => field.valid);
@@ -89,6 +94,9 @@ const Extension = ({
   }
 
   const handleStepSubmission = () => {
+    if(currentStep === context.scheduleOnboardingMeetingStep) {
+      openOnboardingMeetingSchedularModal(context);
+    }
     stepDispatch({ type: "INCREMENT_STEP", currentStep });
   };
 
@@ -109,18 +117,7 @@ const Extension = ({
     }
   };
 
-  const handleSubmit = async (e) => {
-    //Make sure all deal properties are all fresh before submitting form
-    await actions.refreshObjectProperties();
-    const scheduleOnboardingLink = context.crm.objectPipelineSettings.onboardingLink;
-    const brandSegmentLabel = context.crm.objectPipelineSettings.label;
-    context.actions.openIframeModal({
-        uri: scheduleOnboardingLink, // this is a relative link. Some links will be blocked since they don't allow iframing
-        height: 1000,
-        width: 1000,
-        title: `Schedule ${brandSegmentLabel} Onboarding`,
-        flush: true
-    }, /* Callback can be inserted here */);
+  const handleSubmitForm = async (e) => {
     setSubmitting(true);
     let serverlessFunction = await runServerless({ name: "ersCreateFolder", parameters: { formState, clientContext: context } });
     if(serverlessFunction.status === "ERROR") {
