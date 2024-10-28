@@ -20,8 +20,8 @@
       "file": "ersCheckFoldername.js",
       "secrets": ["ERS_API_KEY"]
     },
-    "submitDealClose": {
-      "file": "submitDealClose.js",
+    "saveAndSyncDealClose": {
+      "file": "saveAndSyncDealClose.js",
       "secrets": ["ERS_API_KEY"]
     },
     "validateAssociatedObjectProperties": {

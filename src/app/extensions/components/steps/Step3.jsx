@@ -28,7 +28,6 @@ export const Step3 = ({
     const [validatedObjects, setValidatedObjects] = useState({});
 
     const handleStepSubmitOnValid = async () => {
-        validateAssociatedObjectProperties();
         setValidating(true);
         let associatedObjectsDetails = context.crm?.associatedObjects;
         let associatedObjectsPropertyNamesExist = Object.values(associatedObjectsDetails).every((associatedObjectDetails) => associatedObjectDetails.propertyNameList && associatedObjectDetails.propertyNameList.length > 0);

@@ -7,14 +7,31 @@ exports.main = async (context = {}) => {
   
   const { formState, clientContext } = context.parameters;
   const formData = flattenFormData(formState);
-  
-  console.log(JSON.stringify(formData, null, 2));
+  const { salesBrandSegment, uiExtensionModifiedBrandSegment } = _ensureBrandSegment(clientContext);
+  formData.deal = {
+    value: {
+      hs_object_id: clientContext.crm.objectId,
+      sales_brand_segment: salesBrandSegment,
+      ui_extension_modified_sales_brand_segment: uiExtensionModifiedBrandSegment || null
+    }
+  };
+  console.log("formData:", formData);
+  if(formData.hasOwnProperty('companyAddress')) {
+    /**
+     * This updates the formData object at the same time
+     */
+    let companyProperties = formData.companyAddress?.value;
+    console.log("CompanyProperties:", companyProperties);
+    companyProperties.country = companyProperties.countryselector;
+    delete companyProperties.countryselector;
+  }
   hubspotClient = new hubspot.Client({ accessToken: process.env['PRIVATE_APP_ACCESS_TOKEN'] });
 
   try {
-    const upsertLineItemsResponseData = await upsertHubSpotLineItems(hubspotClient, formData, clientContext);
-    const upsertHubSpotPropertiesResponse = await upsertHubSpotProperties(hubspotClient, formData, clientContext);
-    const createErsFolderResponseData = await createErsFolder(formData, clientContext);
+    //const upsertLineItemsResponse = await upsertHubSpotLineItems(hubspotClient, formData, clientContext);
+    //const upsertHubSpotPropertiesResponse = await upsertHubSpotProperties(hubspotClient, formData, clientContext);
+    //const createErsFolderResponse = await createErsFolder(formData, clientContext);
+    const triggerWorkatoWebhookResponse = await triggerWorkatoWebhook(context, formData);
   } catch(error) {
     console.error(error);
     throw new Error(error.message);
@@ -103,8 +120,16 @@ const upsertHubSpotProperties = async (hubspotClient, formData, clientContext) =
     "folder_name": formData.foldername?.value || null,
     "sales_representative": formData.salesRepresentative?.value?.properties?.id || null,
     "hubspot_owner_id": formData.salesRepresentative?.value?.properties?.id || null,
+    "country": formData.companyAddress?.value?.properties?.countryselector.value || null,
+    "sales_brand_segment": formData.deal?.value?.sales_brand_segment || null,
   };
-
+  /**
+   * This property is only set if the sales brand segment was modified by 
+   * the UI Extension. For debugging/filtering purposes.
+   */
+  if(formData.deal?.value?.ui_extension_modified_sales_brand_segment) {
+    properties.ui_extension_modified_sales_brand_segment = formData.deal?.value?.ui_extension_modified_sales_brand_segment;
+  }
   const simplePublicObjectInput = { properties };
 
   try {
@@ -119,7 +144,7 @@ const upsertHubSpotProperties = async (hubspotClient, formData, clientContext) =
 
 const createErsFolder = async (formData) => {
 
-  const foldername = formData.foldername?.value || null;
+  let foldername = formData.foldername?.value || null;
   if(typeof foldername === 'string') foldername = foldername.trim();
   const companyName = formData.billingCompany?.value?.properties?.name || null;
   /**
@@ -174,14 +199,33 @@ const flattenFormData = (formState) => {
 }
 
 const triggerWorkatoWebhook = async (context, formData) => {
-  const formattedFormData = {};
-  const response = axios.post(
-    'https://webhooks.workato.com/webhooks/rest/94f41cf1-fbf1-42ef-a524-162f2cf3810d/collect-deal-close-card-submission', 
-    formattedFormData, 
-    {
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    });
-
+  const workatoWebhookData = {
+    deal: formData.deal.value,
+    contact: formData.contactAddress.value,
+    company: formData.companyAddress.value,
+    /**
+     * TODO: Consider mapping HubSpot line item id's to NetSuite line items id's
+     * I might need to create the actual line item and then run this function because the ID is set to Null.
+     * There should probably be a HS line item to NetSuite line item mapping so that cancellations can be tracked.
+     */
+    lineItems: formData.lineItems.value,
+    foldername: formData.foldername.value,
+    salesRepresentative: formData.salesRepresentative.value.properties,
+  };
+  console.log("-----------------");
+  console.log(JSON.stringify(workatoWebhookData, null, 2));
+  console.log("-----------------");
+  const response = await axios.post('https://webhooks.workato.com/webhooks/rest/94f41cf1-fbf1-42ef-a524-162f2cf3810d/sync-ers-netsuite-deal', workatoWebhookData);
+  console.log(response);
+  return response;
 };
+
+const _ensureBrandSegment = (clientContext) => {
+  let salesBrandSegment = clientContext.crm?.objectProperties?.sales_brand_segment;
+  let uiExtensionModifiedBrandSegment = false;
+  if(!salesBrandSegment) {
+    salesBrandSegment = clientContext.crm.objectPipelineSettings.label;
+    uiExtensionModifiedBrandSegment = true;
+  }
+  return {salesBrandSegment, uiExtensionModifiedBrandSegment};
+}

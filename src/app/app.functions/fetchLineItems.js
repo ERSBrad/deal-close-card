@@ -19,6 +19,7 @@ exports.main = async (context = {}) => {
                   hs_sku
                   price
                   name
+                  quantity
                   hs_product_id
                   recurringbillingfrequency
                   isplantype
@@ -81,6 +82,7 @@ exports.main = async (context = {}) => {
           label: item.name,
           value: item.hs_sku,
           price: item.price,
+          quantity: item.quantity,
           frequency: item.recurringbillingfrequency ? item.recurringbillingfrequency.label : 'One Time',
           isPlanType: lineItemsPlanType,
           productId: lineItemsProductId

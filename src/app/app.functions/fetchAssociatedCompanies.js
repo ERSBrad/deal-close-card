@@ -54,7 +54,7 @@ const gql = {
                                 city
                                 state
                                 zip
-                                country
+                                countryselector
                             }
                         }
                     }

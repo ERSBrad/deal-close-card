@@ -20,7 +20,7 @@ export const CompanyAddressValidator = ({ context, fieldName, currentStep, state
     'city',
     'state',
     'zip',
-    'country',
+    'countryselector',
   ];
   
   const [properties, setProperties] = useState({});

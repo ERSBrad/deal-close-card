@@ -40,6 +40,7 @@ export const LineItems = ({ context, state, fieldName, dispatch, runServerless, 
             handleErrors(serverlessFunction, context, setError, setValidationMessage);
             if(serverlessFunction.response.dealLineItems.numItems > 0 && (!lineItems.length || lineItems[0]?.value === '')) {
                 setLineItems(serverlessFunction.response.dealLineItems.items);
+                console.log(serverlessFunction.response.dealLineItems.items);
                 setValid(true);
             }
             setProductList(serverlessFunction.response.products);
@@ -69,6 +70,7 @@ export const LineItems = ({ context, state, fieldName, dispatch, runServerless, 
           frequency: selectedItem.frequency || '',
           isPlanType: selectedItem.isPlanType || false,
           productId: selectedItem.productId || null,
+          quantity: selectedItem.quantity || 1,
         };
         updateLineItem(index, updatedItem);
     };

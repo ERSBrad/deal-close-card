@@ -54,13 +54,12 @@ const Extension = ({
   const [currentStep, setCurrentStep] = useState(0);
   const stepNames = ["Add Deal Information", "Add Line Items", "Contact & Company Address"];
   const [unlockedSteps, setUnlockedSteps] = useState([]);
-
   context.actions = actions;
   context.runServerless = runServerless;
   /**
    * Steps are set using arrays, so the first step is 0, second step is 1, etc.
    */
-  context.scheduleOnboardingMeetingStep = 2;
+  context.formDataSyncAndScheduleStep = 2;
   loadExtensionSettings(context, setLoadingSettings);
   
   useEffect(() => {
@@ -93,9 +92,10 @@ const Extension = ({
     return unlockedSteps.includes(step);
   }
 
-  const handleStepSubmission = () => {
-    if(currentStep === context.scheduleOnboardingMeetingStep) {
+  const handleStepSubmission = async () => {
+    if(currentStep === context.formDataSyncAndScheduleStep) {
       openOnboardingMeetingSchedularModal(context);
+      let serverlessFunction = await runServerless({ name: "saveAndSyncDealClose", parameters: { formState, clientContext: context } });
     }
     stepDispatch({ type: "INCREMENT_STEP", currentStep });
   };
@@ -117,7 +117,11 @@ const Extension = ({
     }
   };
 
-  const handleSubmitForm = async (e) => {
+  const handleSubmit = async (e) => {
+    /**
+     * Need to confirm what this updates exactly, no documentation currently. Can't remember why I added it. Leaving it since it's not breaking anything.
+     */
+    await actions.refreshObjectProperties();
     setSubmitting(true);
     let serverlessFunction = await runServerless({ name: "ersCreateFolder", parameters: { formState, clientContext: context } });
     if(serverlessFunction.status === "ERROR") {
