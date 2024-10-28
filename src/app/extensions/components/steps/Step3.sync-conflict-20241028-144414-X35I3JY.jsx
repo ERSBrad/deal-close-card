@@ -18,7 +18,6 @@ export const Step3 = ({
   formDispatch,
   enableSubmit,
   currentStep,
-  handleSubmit,
   handlePreviousStep
 }) => {
 
@@ -79,7 +78,7 @@ export const Step3 = ({
         setValidationMessages([]);
         setError(false);
         setLoadingButtonIcon('success');
-        handleSubmit();
+        handleStepSubmitOnValid()
     };
 
     useEffect(() => {

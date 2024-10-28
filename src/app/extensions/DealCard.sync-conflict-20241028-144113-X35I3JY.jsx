@@ -119,13 +119,13 @@ const Extension = ({
 
   const handleSubmit = async (e) => {
     setSubmitting(true);
-    let serverlessFunction = await runServerless({ name: "submitDealClose", parameters: { formState, clientContext: context } });
+    let serverlessFunction = await runServerless({ name: "ersCreateFolder", parameters: { formState, clientContext: context } });
     if(serverlessFunction.status === "ERROR") {
       console.error(serverlessFunction.message);
       setValidationMessage("An error occurred while processing your request. Try again or contact an administrator.");
       setSubmissionError(true);
     } else {
-      console.log("All submitted");
+      console.log()
       setSubmitted(true);
       setSubmissionError(false);
       setSubmitting(false);
@@ -154,9 +154,7 @@ const Extension = ({
                     onClick={(step) => handleStepClick(step)}
                   />
                 </Box>
-                <Form 
-                  //onSubmit={handleSubmit}
-                >
+                <Form onSubmit={handleSubmit}>
                   {currentStep === 0 && (
                     <Step1
                       context={context}
@@ -188,7 +186,6 @@ const Extension = ({
                       context={context}
                       runServerless={runServerless}
                       actions={actions}
-                      handleSubmit={handleSubmit}
                       handleStepSubmission={handleStepSubmission}
                       formState={formState}
                       formDispatch={formDispatch}

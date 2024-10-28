@@ -119,7 +119,7 @@ const upsertHubSpotProperties = async (hubspotClient, formData, clientContext) =
 
 const createErsFolder = async (formData) => {
 
-  const foldername = formData.foldername?.value || null;
+  let foldername = formData.foldername?.value || null;
   if(typeof foldername === 'string') foldername = foldername.trim();
   const companyName = formData.billingCompany?.value?.properties?.name || null;
   /**
