@@ -16,7 +16,6 @@ export const FoldernameValidator = ({  id, setValidity, fieldName, context, runS
     const [valid, setValid] = useState(false);
     updateFormField(dispatch, currentStep, fieldName, valid, foldername);
 
-
     const checkFoldername = async () => {
         if(foldername && foldername.length > 0 && typeof foldername === "string") {
             const validFoldername = /^[a-z0-9-_]+$/.test(foldername);

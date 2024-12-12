@@ -15,6 +15,7 @@ async function fetchOwnersByTeam(teamIds) {
     try {
         let response = await hubspotClient.crm.owners.ownersApi.getPage();
         let owners = response.results;
+        console.log(owners);
         for(const owner of owners) {
             if("teams" in owner) {
                 owner.teams.forEach((team) => {

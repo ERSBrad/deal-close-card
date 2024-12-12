@@ -7,8 +7,7 @@ exports.main = async (context = {}) => {
   
   const { formState, clientContext } = context.parameters;
   const formData = flattenFormData(formState);
-  
-  console.log(JSON.stringify(formData, null, 2));
+
   hubspotClient = new hubspot.Client({ accessToken: process.env['PRIVATE_APP_ACCESS_TOKEN'] });
 
   try {
@@ -24,7 +23,7 @@ exports.main = async (context = {}) => {
 };
 
 const upsertHubSpotLineItems = async (hubspotClient, formData, clientContext) => {
-
+  let startTime = Date.now();
   let lineItems = formData.lineItems?.value;
   if(!lineItems || lineItems.length === 0) throw new Error("No line items found.");
   let batchInputObjectForDeleteInputs = [];
@@ -86,16 +85,17 @@ const upsertHubSpotLineItems = async (hubspotClient, formData, clientContext) =>
     console.info("Line items upserted successfully.");
 
   } catch (error) {
-
     console.error(error);
-    throw new Error("An error occurred while upserting line items. Please try again later.");
+    throw new Error("Line items upsert failed.");
     
   }
+  let endTime = Date.now();
+  console.log('upsertLineItems Response Time:', (endTime - startTime) /1000, 'seconds');
 
 };
 
 const upsertHubSpotProperties = async (hubspotClient, formData, clientContext) => {
-  
+  let startTime = Date.now();
   let salesSettings = Object.values(clientContext.extension.sales).find((salesTeamBrandSegment) => salesTeamBrandSegment.closingPipelineId === clientContext.crm.objectProperties.pipeline);
   if(!salesSettings || typeof salesSettings !== 'object') throw new Error("The current deals pipeline does not match any existing settings. Please contact an administrator to update the UI Extensions settings with the correct Pipeline ID.");
   let properties = {
@@ -112,13 +112,14 @@ const upsertHubSpotProperties = async (hubspotClient, formData, clientContext) =
     console.info("HubSpot properties upserted successfully.");
   } catch(error) {
     console.error(`${error.body.message} Code: ${error.code} Type: ${error.body.category}`);
-    throw new Error(error.body.message);
+    throw new Error("Hubspot properties upsert failed.");
   }
- 
+  let endTime = Date.now();
+  console.log('upsertHubSpotProperties Response Time', (endTime - startTime) / 1000, 'seconds');
 }; 
 
 const createErsFolder = async (formData) => {
-
+  let startTime = Date.now();
   let foldername = formData.foldername?.value || null;
   if(typeof foldername === 'string') foldername = foldername.trim();
   const companyName = formData.billingCompany?.value?.properties?.name || null;
@@ -153,13 +154,15 @@ const createErsFolder = async (formData) => {
         'X-API-Key': process.env['ERS_API_KEY']
       }
   });
-
   let data = response.data;
   if(!data.success) {
-    throw new Error(data.message);
+    console.error(data.message);
+    throw new Error("ERS folder creation failed.");
   }
+  console.log("ERS Folder created successfully.");
+  let endTime = Date.now();
+  console.log('createErsFolder Response Time:', (endTime - startTime) / 1000, 'seconds');
   return data;
-
 };
 
 const flattenFormData = (formState) => {

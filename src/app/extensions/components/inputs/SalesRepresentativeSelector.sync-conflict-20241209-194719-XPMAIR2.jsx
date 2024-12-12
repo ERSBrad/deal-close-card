@@ -54,7 +54,6 @@ export const SalesRepresentativeSelector = ({ context, fieldName, runServerless,
                     }
                 }
             }
-            console.log(salesRepresentativesByTeamIds);
             setSalesRepresentatives(allSalesRepresentativesInTeams);
             if(currentSalesRepresentative.value === "") {
                 setCurrentSalesRepresentative(suggestedSalesRepresentative);

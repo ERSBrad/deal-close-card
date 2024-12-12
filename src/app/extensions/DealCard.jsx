@@ -2,6 +2,7 @@ import React, { useEffect, useState, useReducer } from "react";
 import {
   hubspot,
   Box,
+  Button,
   Divider,
   ErrorState,
   Flex,
@@ -12,7 +13,7 @@ import {
   StepIndicator,
   Text
 } from "@hubspot/ui-extensions";
-
+ 
 import {
   Step1,
   Step2,
@@ -21,7 +22,7 @@ import {
 
 import { stepReducer, formReducer, formInitialState } from "./utils/reducers";
 import { loadExtensionSettings } from "./utils/settings";
-import { openOnboardingMeetingSchedularModal } from "./utils";
+import { openOnboardingMeetingIframe, openPaymentCaptureIframe } from "./utils";
 // Define the extension to be run within the Hubspot CRM
 hubspot.extend(({ context, runServerlessFunction, actions }) => (
   <Extension
@@ -54,6 +55,8 @@ const Extension = ({
   const [currentStep, setCurrentStep] = useState(0);
   const stepNames = ["Add Deal Information", "Add Line Items", "Contact & Company Address"];
   const [unlockedSteps, setUnlockedSteps] = useState([]);
+  const [paymentTokenCaptured, setPaymentTokenCaptured] = useState(false);
+  const [requiredDataAvailable, setRequiredDataAvailable] = useState(false);
 
   context.actions = actions;
   context.runServerless = runServerless;
@@ -62,7 +65,7 @@ const Extension = ({
    */
   context.scheduleOnboardingMeetingStep = 2;
   loadExtensionSettings(context, setLoadingSettings);
-  
+
   useEffect(() => {
     console.debug("context", context);
     console.debug("formState", formState);
@@ -71,7 +74,7 @@ const Extension = ({
     let shouldEnableSubmit = Object.values(currentStepsFormFields).every(field => field.valid);
     setEnableSubmit(shouldEnableSubmit);
   }, [formState]);
-
+ 
   useEffect(() => {
     setCurrentStep(stepState.currentStep);
   }, [stepState.currentStep]);
@@ -85,18 +88,11 @@ const Extension = ({
     });
   }, [currentStep]);
 
-  /*useEffect(() => { 
-    console.log("formState", formState);
-  }, [formState]);*/
-
   const stepIsUnlocked = (step) => {
     return unlockedSteps.includes(step);
   }
 
   const handleStepSubmission = () => {
-    if(currentStep === context.scheduleOnboardingMeetingStep) {
-      openOnboardingMeetingSchedularModal(context);
-    }
     stepDispatch({ type: "INCREMENT_STEP", currentStep });
   };
 
@@ -118,19 +114,31 @@ const Extension = ({
   };
 
   const handleSubmit = async (e) => {
+    openOnboardingMeetingIframe(context);
     setSubmitting(true);
+    /**
+     * TODO: Have this return the new properties that Workato should've added 
+     * (maybe it can be auto refreshed on the client UX extension side?) while
+     * onboarding iframe is open. Use a callback once onboarding iframe closes
+     * and then use the new data to load the payment form if the properties are
+     * present.
+     */
     let serverlessFunction = await runServerless({ name: "submitDealClose", parameters: { formState, clientContext: context } });
     if(serverlessFunction.status === "ERROR") {
       console.error(serverlessFunction.message);
       setValidationMessage("An error occurred while processing your request. Try again or contact an administrator.");
       setSubmissionError(true);
     } else {
-      console.log("All submitted");
       setSubmitted(true);
       setSubmissionError(false);
       setSubmitting(false);
     }
   };
+
+  const openPaymentCaptureModal = async (e) => {
+    console.log("DCC oPCM: ", context);
+    openPaymentCaptureIframe(context);
+  }
 
   return (
     <Flex direction="column" gap="large" align="stretch">
@@ -230,7 +238,24 @@ const Extension = ({
                 <Text>{validationMessage}</Text>
               </Flex>
             )}
-            {submitted && !submissionError && (
+            {(submitted && !paymentTokenCaptured && !submissionError) && (
+                <Flex direction="column" gap="large" align="center" justify="center">
+                  <Image
+                    src="https://9145732.fs1.hubspotusercontent-na1.net/hubfs/9145732/ui-extensions/sending-icon-hs.png"
+                    width={60}
+                  />
+                  <Flex direction="column" gap="small" align="center">
+                    <Heading inline={true}>
+                      <Text format={{
+                        fontWeight: 'bold'
+                      }}>Ready to Capture Payment Token</Text>
+                    </Heading>
+                    <Text>Click the button below to capture the payment token.</Text>
+                    <Button onClick={openPaymentCaptureModal}>Capture Payment Token</Button>
+                  </Flex>
+                </Flex>
+            )}
+            {(submitted && paymentTokenCaptured && !submissionError) && (
                 <Flex direction="column" gap="large" align="center" justify="center">
                   <Image
                     src="https://9145732.fs1.hubspotusercontent-na1.net/hubfs/9145732/success-image-custom-component.png"
@@ -238,8 +263,8 @@ const Extension = ({
                   />
                   <Flex direction="column" gap="small" align="center">
                     <Heading inline={true}>
-                      <Text format={{ 
-                        fontWeight: 'bold' 
+                      <Text format={{
+                        fontWeight: 'bold'
                       }}>New Deal Was Processed Successfully!</Text>
                     </Heading>
                     <Text>A welcome email will be dispatched to the customer shortly discussing onboarding and the next steps.</Text>
@@ -247,7 +272,7 @@ const Extension = ({
                 </Flex>
             )}
           </>
-        )};
+        )}
       <Divider distance="xl" />
     </Flex>
   );
